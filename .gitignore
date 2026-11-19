@@ -1,2 +1,22 @@
-vendor/
+# Python
 __pycache__/
+*.py[cod]
+*.orig
+*.tmp
+.venv/
+venv/
+
+# Credenciais e dados locais: nunca versionar
+google_client.json
+google_client_secret.json
+*client_secret*.json
+.env
+*.log
+tasks.json
+config.json
+
+# Editores e sistema
+.idea/
+.vscode/
+*.swp
+.DS_Store
