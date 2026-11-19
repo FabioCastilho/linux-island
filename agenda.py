@@ -159,7 +159,8 @@ class Agenda:
                 self.google.login()
                 GLib.idle_add(self._logged_in)
             except (AuthError, urllib.error.URLError, OSError, ValueError, KeyError) as e:
-                GLib.idle_add(lambda: self._set_status(_("Falha no login: {erro}").format(erro=e), False) and False)
+                msg = _("Falha no login: {erro}").format(erro=e)  # `e` some ao sair do except
+                GLib.idle_add(lambda: self._set_status(msg, False) and False)
 
         threading.Thread(target=work, daemon=True).start()
 

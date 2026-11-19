@@ -1,29 +1,25 @@
 """Janela de configurações. Tudo é aplicado ao vivo e salvo automaticamente."""
 import os
 
-from gi.repository import GLib, Gtk
+from gi.repository import Gdk, GLib, Gtk
 
+import kde
 from config import css_color, rgba
 from i18n import LANGUAGES, _
+from icons import glyph_button
 from settings_pages import SettingsPagesMixin
+from settings_themes import SettingsThemesMixin
+from themes import THEME_KEYS
 
 AUTOSTART = os.path.join(GLib.get_user_config_dir(), "autostart", "linux-island.desktop")
 RUN_SH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "run.sh")
-
-PRESETS = [  # nome, fundo, texto, destaque automático, destaque fixo
-    ("Clássico", "rgba(0,0,0,1)", "rgb(255,255,255)", True, "rgb(30,215,96)"),
-    ("Vidro", "rgba(20,20,28,0.72)", "rgb(255,255,255)", True, "rgb(30,215,96)"),
-    ("Claro", "rgba(246,246,248,1)", "rgb(20,20,24)", False, "rgb(0,122,255)"),
-    ("Spotify", "rgba(18,18,18,1)", "rgb(255,255,255)", False, "rgb(30,215,96)"),
-    ("Grafite", "rgba(43,46,52,1)", "rgb(230,232,236)", False, "rgb(255,159,67)"),
-]
-
 
 def settings_css(cfg):
     """Mesmo visual da ilha: fundo/texto da config, cantos redondos, pílulas."""
     bg, fg = rgba(cfg["bg_color"]), rgba(cfg["text_color"])
     bg.alpha = 1.0  # a janela de configurações não fica transparente
-    ac = rgba("rgb(30,215,96)" if cfg["accent_auto"] else cfg["accent_color"])
+    follow = kde.accent_spec() if cfg["accent_follow_kde"] else None
+    ac = rgba(follow or ("rgb(30,215,96)" if cfg["accent_auto"] else cfg["accent_color"]))
     B, F, A = css_color(bg), css_color(fg), css_color(ac)
 
     def f(a):
@@ -48,7 +44,14 @@ window.island-settings button {{
 }}
 window.island-settings button:hover {{ background: {f(0.12)}; }}
 window.island-settings button:active {{ background: {f(0.2)}; }}
-window.island-settings headerbar button.titlebutton {{ padding: 4px; min-width: 24px; min-height: 24px; }}
+window.island-settings headerbar button.wincontrol {{
+  padding: 0; margin: 0 2px; min-width: 28px; min-height: 28px; border-radius: 999px;
+  background: {f(0.06)}; color: {F};
+}}
+window.island-settings headerbar button.wincontrol:hover {{ background: {f(0.14)}; }}
+window.island-settings headerbar button.wincontrol.close:hover {{
+  background: rgb(220,60,60); color: #ffffff;
+}}
 window.island-settings stackswitcher button {{
   background: transparent; color: {f(0.6)}; margin: 0 2px; font-weight: 600;
 }}
@@ -115,7 +118,7 @@ def set_autostart(enabled):
         os.remove(AUTOSTART)
 
 
-class Settings(SettingsPagesMixin, Gtk.Window):
+class Settings(SettingsThemesMixin, SettingsPagesMixin, Gtk.Window):
     def __init__(self, cfg, app=None, web=None, water=None, agenda=None):
         super().__init__(title=_("linux-island — Configurações"))
         if app:
@@ -135,8 +138,11 @@ class Settings(SettingsPagesMixin, Gtk.Window):
             self.get_screen(), self._css, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION + 2)
         self._restyle()
 
-        header = Gtk.HeaderBar(show_close_button=True)
+        # os botões de janela são nossos (ícones vetoriais): os do tema do sistema saíam
+        # deslocados com este CSS e, com cor fixa, sumiriam num tema claro
+        header = Gtk.HeaderBar(show_close_button=False)
         header.set_title(_("Configurações"))
+        header.pack_end(self._window_controls())
         reset = Gtk.Button(label=_("Restaurar padrões"))
         reset.connect("clicked", lambda *_a: self.cfg.reset())
         header.pack_end(reset)
@@ -149,6 +155,7 @@ class Settings(SettingsPagesMixin, Gtk.Window):
         stack.add_titled(self._page_clock_weather(), "info", _("Relógio e clima"))
         stack.add_titled(self._page_behavior(), "behavior", _("Comportamento"))
         stack.add_titled(self._page_notifications(), "notifications", _("Notificações"))
+        stack.add_titled(self._page_focus(), "focus", _("Foco"))
         if water is not None:
             stack.add_titled(self._page_water(), "water", _("Água"))
         if agenda is not None:
@@ -164,6 +171,36 @@ class Settings(SettingsPagesMixin, Gtk.Window):
             Gtk.StyleContext.remove_provider_for_screen(self.get_screen(), self._css)))
         self.show_all()
 
+    def _window_controls(self):
+        box = Gtk.Box(spacing=0)
+        box.set_margin_start(6)
+
+        def make(glyph, tip, cb, extra=None):
+            b, g = glyph_button(glyph, 14, cb, tip)
+            ctx = b.get_style_context()
+            ctx.remove_class("control")
+            ctx.add_class("wincontrol")
+            if extra:
+                ctx.add_class(extra)
+            box.pack_start(b, False, False, 0)
+            return g
+
+        make("win_min", _("Minimizar"), self.iconify)
+        self._max_glyph = make("win_max", _("Maximizar"), self._toggle_maximize)
+        make("win_close", _("Fechar"), self.close, "close")
+        self.connect("window-state-event", self._on_window_state)
+        return box
+
+    def _toggle_maximize(self):
+        self.unmaximize() if self.is_maximized() else self.maximize()
+
+    def _on_window_state(self, _w, ev):
+        maximized = bool(ev.new_window_state & Gdk.WindowState.MAXIMIZED)
+        self._max_glyph.set_glyph("win_restore" if maximized else "win_max")
+        self._max_glyph.get_parent().set_tooltip_text(_("Restaurar") if maximized
+                                                      else _("Maximizar"))
+        return False
+
     def show_page(self, name):
         if self._stack.get_child_by_name(name):
             self._stack.set_visible_child_name(name)
@@ -172,8 +209,10 @@ class Settings(SettingsPagesMixin, Gtk.Window):
         self._css.load_from_data(settings_css(self.cfg).encode())
 
     def _on_config(self, key):
-        if key in ("bg_color", "text_color", "accent_auto", "accent_color"):
+        if key in ("bg_color", "text_color", "accent_auto", "accent_color", "accent_follow_kde"):
             self._restyle()
+        if key in THEME_KEYS and hasattr(self, "_theme_status"):
+            self._update_theme_status()
         fn = self._sync.get(key)
         if fn:
             fn()
@@ -267,6 +306,16 @@ class Settings(SettingsPagesMixin, Gtk.Window):
                                    and entry.set_text(self.cfg[key]))
         return entry
 
+    @staticmethod
+    def _monitor_options():
+        from gi.repository import Gdk
+        display = Gdk.Display.get_default()
+        opts = [("0", "Automático")]
+        for i in range(display.get_n_monitors()):
+            g = display.get_monitor(i).get_geometry()
+            opts.append((str(i + 1), "Monitor {n} ({w}×{h})".format(n=i + 1, w=g.width, h=g.height)))
+        return opts
+
     def _choice(self, key, options):
         combo = Gtk.ComboBoxText()
         for value, label in options:
@@ -280,71 +329,54 @@ class Settings(SettingsPagesMixin, Gtk.Window):
     def _page_appearance(self):
         scroll, page = self._page()
 
-        themes = self._group(page, "Temas")
-        flow = Gtk.FlowBox(selection_mode=Gtk.SelectionMode.NONE, max_children_per_line=5,
-                           column_spacing=8, row_spacing=8)
-        for side in ("top", "bottom", "start", "end"):
-            getattr(flow, f"set_margin_{side}")(10)
-        for name, bg, fg, auto, accent in PRESETS:
-            flow.add(self._preset_button(name, bg, fg, auto, accent))
-        themes.add(flow)
+        self._themes_group(page)
+        self._auto_theme_group(page)
 
         colors = self._group(page, "Cores")
         self._row(colors, "Fundo", self._color("bg_color", alpha=True),
                   "Use a transparência para um efeito de vidro")
         self._row(colors, "Texto e ícones", self._color("text_color"))
-        self._row(colors, "Destaque automático", self._switch("accent_auto"),
-                  "Equalizador e barra de progresso na cor da capa do álbum")
+        follow_row = self._row(colors, "Seguir a cor de destaque do KDE",
+                               self._switch("accent_follow_kde"),
+                               "Usa a cor de destaque das configurações do sistema e acompanha "
+                               "quando você a troca")
+        auto_row = self._row(colors, "Destaque automático", self._switch("accent_auto"),
+                             "Equalizador e barra de progresso na cor da capa do álbum")
         accent_row = self._row(colors, "Cor de destaque", self._color("accent_color"))
-        accent_row.set_sensitive(not self.cfg["accent_auto"])
-        prev = self._sync["accent_auto"]
-        self._sync["accent_auto"] = lambda: (prev(), accent_row.set_sensitive(
-            not self.cfg["accent_auto"]))
+
+        def accent_rows():
+            follow = self.cfg["accent_follow_kde"]   # seguir o KDE manda sobre as outras duas
+            auto_row.set_sensitive(not follow)
+            accent_row.set_sensitive(not follow and not self.cfg["accent_auto"])
+
+        accent_rows()
+        for key in ("accent_auto", "accent_follow_kde"):
+            prev = self._sync[key]
+            self._sync[key] = lambda p=prev: (p(), accent_rows())
+
+        alerts = self._group(page, "Cores dos alertas")
+        self._row(alerts, "Água", self._color("color_water"), "Lembrete de beber água")
+        self._row(alerts, "Reunião", self._color("color_meeting"), "Aviso de reunião da agenda")
+        self._row(alerts, "Foco", self._color("color_focus"),
+                  "Pomodoro, fim do foco e gasto acima do limite")
+        self._row(alerts, "Claude Code", self._color("color_claude"),
+                  "Gráficos e botões da página do Claude Code")
 
         shape = self._group(page, "Forma")
         self._row(shape, "Arredondamento expandida", self._spin("radius_expanded", 8, 48),
                   "Raio dos cantos, em px")
+        self._row(shape, "Arredondamento fechada", self._spin("radius_compact", 4, 24),
+                  "Raio dos cantos de baixo com a ilha fechada, em px")
         self._row(shape, "Borda sutil", self._switch("border"))
+        self._row(shape, "Efeito vidro", self._switch("glass_style"),
+                  "Brilho no topo e aro de luz, como o vidro da Apple")
+        self._row(shape, "Desfoque do fundo", self._switch("glass_blur"),
+                  "Usa o desfoque do KDE por trás do vidro (precisa do efeito Desfoque ligado)")
+        self._row(shape, "Estilo entalhe", self._switch("notch_style"),
+                  "Colada no topo, com as quinas de cima côncavas que se fundem à borda da tela")
+        self._row(shape, "Curva do entalhe", self._spin("notch_ear", 4, 32),
+                  "Tamanho da curva que liga a ilha à borda da tela, em px (só no estilo entalhe)")
         return scroll
-
-    def _preset_button(self, name, bg, fg, auto, accent):
-        area = Gtk.DrawingArea()
-        area.set_size_request(64, 26)
-
-        def draw(_w, cr):
-            c = rgba(bg)
-            cr.set_source_rgba(c.red, c.green, c.blue, max(c.alpha, 0.35))
-            w, h = area.get_allocated_width(), area.get_allocated_height()
-            r = h / 2
-            cr.arc(r, r, r, 1.5708, 4.7124)
-            cr.arc(w - r, r, r, -1.5708, 1.5708)
-            cr.close_path()
-            cr.fill()
-            a = rgba(accent)
-            cr.set_source_rgb(a.red, a.green, a.blue)
-            cr.arc(w - r, r, 4, 0, 6.2832)
-            cr.fill()
-            t = rgba(fg)
-            cr.set_source_rgb(t.red, t.green, t.blue)
-            cr.rectangle(r - 2, r - 1.5, w / 2 - r, 3)
-            cr.fill()
-
-        area.connect("draw", draw)
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=4)
-        box.pack_start(area, False, False, 0)
-        box.pack_start(Gtk.Label(label=_(name)), False, False, 0)
-        btn = Gtk.Button()
-        btn.set_relief(Gtk.ReliefStyle.NONE)
-        btn.add(box)
-
-        def apply(*_):
-            self.cfg.set("bg_color", bg)
-            self.cfg.set("text_color", fg)
-            self.cfg.set("accent_auto", auto)
-            self.cfg.set("accent_color", accent)
-
-        btn.connect("clicked", apply)
-        return btn
 
     def _page_clock_weather(self):
         scroll, page = self._page()
@@ -378,6 +410,7 @@ class Settings(SettingsPagesMixin, Gtk.Window):
         self._row(weather, "Unidade", self._choice(
             "units", [("celsius", "Celsius (°C)"), ("fahrenheit", "Fahrenheit (°F)")]))
         self._row(weather, "Mostrar clima na pílula", self._switch("show_weather"))
+        self._row(weather, "Mostrar uso da CPU na pílula", self._switch("show_cpu"))
         return scroll
 
     def _page_behavior(self):
@@ -398,6 +431,24 @@ class Settings(SettingsPagesMixin, Gtk.Window):
 
         pos = self._group(page, "Posição")
         self._row(pos, "Distância do topo (px)", self._spin("margin_top", 0, 200))
+        self._row(pos, "Esconder no topo", self._switch("auto_hide"),
+                  "A ilha sobe para fora da tela e desce com o mouse, notificações e alertas")
+        self._row(pos, "Esconder depois de (s)", self._spin("auto_hide_delay_s", 1, 60))
+        self._row(pos, "Monitor", self._choice("monitor", self._monitor_options()),
+                  "Em qual tela a ilha aparece")
+
+        look = self._group(page, "Animações e visual")
+        self._row(look, "Velocidade das animações", self._choice("animations", [
+            ("none", "Sem animação"), ("fast", "Rápida"), ("normal", "Normal"),
+            ("relaxed", "Suave e lenta")]), "Vale na hora para as próximas transições")
+        self._row(look, "Equalizador", self._choice("eq_style", [
+            ("bars", "Barras"), ("mirror", "Espectro"), ("wave", "Onda"), ("dots", "Pontos"),
+            ("pulse", "Pulso")]), "Desenho animado enquanto a música toca")
+        self._row(look, "Capa do álbum", self._choice("art_glow", [
+            ("none", "Simples"), ("glow", "Brilho em volta"), ("blur", "Fundo desfocado")]),
+            "Brilho com a cor da capa ou um cartão com a capa desfocada atrás do player")
+
+        self._pages_group(page)
 
         lang = self._group(page, "Idioma")
         self._row(lang, "Idioma da ilha", self._choice("language", LANGUAGES),
@@ -410,4 +461,7 @@ class Settings(SettingsPagesMixin, Gtk.Window):
         sw = Gtk.Switch(active=autostart_enabled())
         sw.connect("notify::active", lambda w, _p: set_autostart(w.get_active()))
         self._row(system, "Iniciar com a sessão", sw)
+        self._row(system, "Mostrar câmera e microfone em uso", self._switch("privacy_indicator"),
+                  "Um ícone na pílula, ao lado da xícara, enquanto algum app usa a webcam ou o "
+                  "microfone. Passe o mouse para ver quais apps")
         return scroll

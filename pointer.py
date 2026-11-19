@@ -16,11 +16,24 @@ SWIPE_PX = 50            # a partir disso, arrastar para o lado troca de página
 HSCROLL_STEP = 3.0       # deltas horizontais do touchpad para trocar de página
 COLLAPSE_DELAY_MS = 700  # tolera leaves espúrios do compositor
 VOLUME_STEP = 0.05       # 5% por "clique" da roda do mouse
+LIST_PAGES = ("notifs", "tasks")  # páginas com lista rolável
 
 
 def log(*a):
     if DEBUG:
         print(f"[island {time.monotonic():.2f}]", *a, flush=True)
+
+
+def _event_state(ev):
+    """Máscara de botões/teclas do evento. Conforme a versão do PyGObject e o tipo do evento
+    (enter/leave/botão), get_state() devolve a máscara direto ou uma tupla (ok, máscara)."""
+    try:
+        st = ev.get_state()
+    except (AttributeError, TypeError):
+        st = getattr(ev, "state", 0)
+    if isinstance(st, tuple):
+        st = st[-1]
+    return st
 
 
 class InputMixin:
@@ -58,6 +71,7 @@ class InputMixin:
         if not self.hovered:
             self._closed_by_click = False
         if self.hovered:
+            self.autohide_poke()
             self._cancel("collapse")
             if not self.expanded and not self._closed_by_click and self.cfg["hover_expand"]:
                 self._later("expand", self.cfg["hover_delay_ms"],
@@ -66,13 +80,14 @@ class InputMixin:
             self._cancel("expand")
             if self.expanded:
                 self._later("collapse", COLLAPSE_DELAY_MS,
-                            lambda: self._pointer_inside() or self.set_expanded(False))
+                            lambda: (self._pointer_inside() or self._editing
+                                     or self.set_expanded(False)))
 
     def _drop_stale_press(self, ev):
         """Se a soltura do botão se perdeu, não deixa a ilha presa aberta."""
         if self._press is None:
             return
-        held = ev.get_state()[1] & Gdk.ModifierType.BUTTON1_MASK
+        held = _event_state(ev) & Gdk.ModifierType.BUTTON1_MASK
         if not held or time.monotonic() - self._press[2] > 3:
             log("press perdido, descartando")
             self._press = None
@@ -126,6 +141,8 @@ class InputMixin:
         ok, dx, dy = ev.get_scroll_deltas()
         if self.expanded and self._hscroll_page(ev, ok, dx, dy):
             return True
+        if self.expanded and self.pages.get_visible_child_name() in LIST_PAGES:
+            return False  # nas listas a rolagem é da lista, não do volume
         if not self.cfg["scroll_volume"] or not self.player.proxy:
             return False
         log("scroll", ev.time, ev.direction.value_nick, ok, dy, ev.get_source_device().get_name())

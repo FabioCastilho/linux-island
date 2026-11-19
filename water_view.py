@@ -3,10 +3,11 @@ import math
 
 from gi.repository import Gtk
 
+import palette
 from views import control, label
+from widgets import Tweened
 from i18n import _
 
-WATER_BLUE = (0.16, 0.62, 0.96)
 
 
 def drop_path(cr, x, y, w, h):
@@ -51,7 +52,7 @@ class Drops(Gtk.DrawingArea):
             y = (i // self.PER_ROW) * (self.H + self.GAP)
             drop_path(cr, x + 0.5, y + 0.5, self.W - 1, self.H - 1)
             if i < self.filled:
-                cr.set_source_rgb(*WATER_BLUE)
+                cr.set_source_rgb(*palette.WATER)
                 cr.fill()
             else:
                 cr.set_source_rgba(*self.fg, 0.25)
@@ -65,24 +66,20 @@ class DropIcon(Gtk.DrawingArea):
         self.set_size_request(size, size)
         self.set_valign(Gtk.Align.CENTER)
         self.connect("draw", lambda _w, cr: (
-            drop_path(cr, size * 0.18, 0, size * 0.64, size), cr.set_source_rgb(*WATER_BLUE),
+            drop_path(cr, size * 0.18, 0, size * 0.64, size), cr.set_source_rgb(*palette.WATER),
             cr.fill()))
 
 
-class Ring(Gtk.DrawingArea):
-    """Anel de progresso da meta do dia."""
+class Ring(Tweened, Gtk.DrawingArea):
+    """Anel de progresso da meta do dia (anima ao mudar)."""
 
     def __init__(self, size=112, width=9):
         super().__init__()
+        self._tween_init()
         self.size, self.width = size, width
-        self.fraction = 0.0
         self.fg = (1, 1, 1)
         self.set_size_request(size, size)
         self.connect("draw", self._draw)
-
-    def set_fraction(self, f):
-        self.fraction = max(0.0, min(1.0, f))
-        self.queue_draw()
 
     def _draw(self, _w, cr):
         c = self.size / 2
@@ -93,7 +90,7 @@ class Ring(Gtk.DrawingArea):
         cr.stroke()
         if self.fraction > 0:
             cr.set_line_cap(1)  # ROUND
-            cr.set_source_rgb(*WATER_BLUE)
+            cr.set_source_rgb(*palette.WATER)
             start = -math.pi / 2
             cr.arc(c, c, r, start, start + 2 * math.pi * self.fraction)
             cr.stroke()

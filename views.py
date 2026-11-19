@@ -1,10 +1,13 @@
 """Conteúdo da ilha: modo compacto (no painel) e expandido (relógio, clima, música)."""
 from datetime import date, timedelta
 
-from gi.repository import Gtk, Pango
+import cairo
+from gi.repository import Gdk, GdkPixbuf, Gtk, Pango
 
+import anim
 from i18n import _, long_date, short_date, weekday
-from widgets import Art, Equalizer, Progress
+from icons import Glyph
+from widgets import CupIcon, MiniRing, Art, Equalizer, Progress, rounded_rect
 
 
 def fmt_time(us):
@@ -57,7 +60,7 @@ def volume_icon(v):
 def revealer(child, transition):
     r = Gtk.Revealer()
     r.set_transition_type(transition)
-    r.set_transition_duration(260)
+    anim.register(r, 260)
     r.add(child)
     return r
 
@@ -104,6 +107,22 @@ class Compact(Gtk.Box):
         wbox.pack_start(self.w_temp, False, False, 0)
         self.w_rev = revealer(wbox, Gtk.RevealerTransitionType.SLIDE_LEFT)
 
+        cbox = Gtk.Box(spacing=5)
+        cbox.set_margin_start(12)
+        self.cpu_ring = MiniRing(14)
+        self.cpu_label = label("temp")
+        cbox.pack_start(self.cpu_ring, False, False, 0)
+        cbox.pack_start(self.cpu_label, False, False, 0)
+        self.cpu_rev = revealer(cbox, Gtk.RevealerTransitionType.SLIDE_LEFT)
+        self.cpu_rev.set_tooltip_text(_("Uso da CPU"))
+
+        awake = Gtk.Box()
+        awake.set_margin_start(11)
+        self.cup = CupIcon(14)
+        awake.add(self.cup)
+        self.awake_rev = revealer(awake, Gtk.RevealerTransitionType.SLIDE_LEFT)
+        self.awake_rev.set_tooltip_text(_("PC mantido acordado"))
+
         self.eq = Equalizer(14, 12)
         eq_box = Gtk.Box()
         eq_box.set_margin_start(11)
@@ -124,8 +143,29 @@ class Compact(Gtk.Box):
         dev_box.add(self.dev_icon)
         self.dev_rev = revealer(dev_box, Gtk.RevealerTransitionType.SLIDE_LEFT)
 
+        focus = Gtk.Box(spacing=5)
+        focus.set_margin_start(12)
+        focus.pack_start(Glyph("timer", 13), False, False, 0)
+        self.focus_label = label("pill-chip")
+        focus.pack_start(self.focus_label, False, False, 0)
+        self.focus_rev = revealer(focus, Gtk.RevealerTransitionType.SLIDE_LEFT)
+        self.focus_rev.set_tooltip_text(_("Foco em andamento"))
+
+        self.cost_label = label("pill-chip")
+        cost = Gtk.Box()
+        cost.set_margin_start(12)
+        cost.add(self.cost_label)
+        self.cost_rev = revealer(cost, Gtk.RevealerTransitionType.SLIDE_LEFT)
+        self.cost_rev.set_tooltip_text(_("Gasto de hoje no Claude Code"))
+
+        # câmera e microfone em uso: ao lado da xícara, em verde e laranja como no macOS
+        self.mic_glyph, self.mic_rev = self._privacy_icon("mic", (1.0, 0.62, 0.20))
+        self.cam_glyph, self.cam_rev = self._privacy_icon("camera", (0.30, 0.84, 0.42))
+
         info = Gtk.Box()
-        for w in (self.clock, self.date_rev, self.w_rev, self.vol_rev, self.dev_rev):
+        for w in (self.clock, self.date_rev, self.w_rev, self.cpu_rev, self.focus_rev,
+                  self.cost_rev, self.awake_rev, self.cam_rev, self.mic_rev, self.vol_rev,
+                  self.dev_rev):
             info.pack_start(w, False, False, 0)
 
         track = Gtk.Box(spacing=6)
@@ -140,7 +180,7 @@ class Compact(Gtk.Box):
         self.middle.set_homogeneous(False)
         self.middle.set_interpolate_size(True)
         self.middle.set_transition_type(Gtk.StackTransitionType.CROSSFADE)
-        self.middle.set_transition_duration(320)
+        anim.register(self.middle, 320)
         self.middle.add_named(info, "info")
         self.middle.add_named(track, "track")
 
@@ -167,6 +207,45 @@ class Compact(Gtk.Box):
         self.date_rev.set_reveal_child(show_date)
         self.show_weather = show_weather
         self.w_rev.set_reveal_child(show_weather and self._has_weather)
+
+    @staticmethod
+    def _privacy_icon(name, color):
+        glyph = Glyph(name, 14)
+        glyph.set_color(color)
+        box = Gtk.Box()
+        box.set_margin_start(11)
+        box.add(glyph)
+        return glyph, revealer(box, Gtk.RevealerTransitionType.SLIDE_LEFT)
+
+    def set_privacy(self, mic_apps, cam_apps):
+        """Mostra os ícones enquanto há apps usando o microfone/a câmera (nomes no tooltip)."""
+        for rev, apps, text in ((self.mic_rev, mic_apps, _("Microfone em uso: {apps}")),
+                                (self.cam_rev, cam_apps, _("Câmera em uso: {apps}"))):
+            if apps:
+                rev.set_tooltip_text(text.format(apps=", ".join(apps)))
+            rev.set_reveal_child(bool(apps))
+
+    def set_awake(self, on):
+        self.awake_rev.set_reveal_child(on)
+
+    def set_focus_timer(self, text):
+        """text='12:34' mostra o contador do foco na pílula; None esconde."""
+        if text:
+            self.focus_label.set_text(text)
+        self.focus_rev.set_reveal_child(bool(text))
+
+    def set_cost(self, text, over=False):
+        """text='US$ 1.23' mostra o gasto do dia no Claude Code; None esconde.
+        over: passou do limite diário (o valor fica vermelho)."""
+        ctx = self.cost_label.get_style_context()
+        (ctx.add_class if over else ctx.remove_class)("over")
+        if text:
+            self.cost_label.set_text(text)
+        self.cost_rev.set_reveal_child(bool(text))
+
+    def set_cpu(self, u):
+        self.cpu_ring.set_fraction(u)
+        self.cpu_label.set_text(f"{round(u * 100)}%")
 
     def show_volume(self, v, visible):
         self.vol_icon.set_from_icon_name(volume_icon(v), Gtk.IconSize.BUTTON)
@@ -266,9 +345,14 @@ class Expanded(Gtk.Box):
     # --- Spotify --------------------------------------------------------
     def _build_music(self):
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        self._card_on, self._card_pix, self.card_base = False, None, (0.0, 0.0, 0.0)
+        self.music_box = box
+        box.connect("draw", self._draw_card)
         sep = Gtk.Separator()
         sep.set_margin_top(14)
         sep.set_margin_bottom(6)
+        self.music_sep = sep
+        sep.set_no_show_all(True)  # o modo "blur" a esconde; o show_all() da janela não a traz de volta
         box.pack_start(sep, False, False, 0)
 
         head = Gtk.Box(spacing=12)
@@ -318,6 +402,39 @@ class Expanded(Gtk.Box):
         for w in (head, bar, ctrls, vol):
             box.pack_start(w, False, False, 0)
         return box
+
+    # --- capa: brilho ou fundo desfocado -------------------------------------
+    def set_art_mode(self, mode, accent):
+        """mode: 'none', 'glow' (brilho em volta da capa) ou 'blur' (cartão com a capa desfocada)."""
+        self.art.set_glow(accent if mode == "glow" else None)
+        self._card_on = mode == "blur"
+        ctx = self.music_box.get_style_context()
+        (ctx.add_class if self._card_on else ctx.remove_class)("music-card")
+        self.music_sep.set_visible(not self._card_on)
+        self.music_box.queue_draw()
+
+    def set_art_pixbuf(self, pb):
+        # 12×12 e esticado com filtro bilinear na hora de pintar: é o "desfoque", quase de graça
+        self._card_pix = pb.scale_simple(12, 12, GdkPixbuf.InterpType.BILINEAR) if pb else None
+        self.music_box.queue_draw()
+
+    def _draw_card(self, box, cr):
+        if not (self._card_on and self._card_pix):
+            return False
+        w, h = box.get_allocated_width(), box.get_allocated_height()
+        rounded_rect(cr, 0, 0, w, h, 18)
+        cr.clip()
+        cr.save()
+        cr.scale(w / 12, h / 12)
+        Gdk.cairo_set_source_pixbuf(cr, self._card_pix, 0, 0)
+        pattern = cr.get_source()
+        pattern.set_filter(cairo.FILTER_BILINEAR)
+        pattern.set_extend(cairo.EXTEND_PAD)
+        cr.paint()
+        cr.restore()
+        cr.set_source_rgba(*self.card_base, 0.62)  # a cor do fundo por cima: o texto segue legível
+        cr.paint()
+        return False
 
     def set_volume(self, v):
         self.vol_img.set_from_icon_name(volume_icon(v), Gtk.IconSize.BUTTON)

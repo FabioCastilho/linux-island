@@ -5,6 +5,7 @@ self._row, self._switch, self._spin e self._sync de lá.
 """
 from gi.repository import GLib, Gtk
 
+import pagelist
 from i18n import _
 
 
@@ -23,8 +24,23 @@ class SettingsPagesMixin:
         self._row(main, "Não perturbe", self._switch("notif_dnd"),
                   "Pausa as notificações na ilha (as do sistema continuam normais)")
         self._row(main, "Duração (s)", self._spin("notif_duration_s", 2, 15))
+        self._row(main, "Avisar quando o Claude Code terminar", self._switch("claude_alert"),
+                  "A pílula mostra o projeto quando uma sessão termina e espera por você")
         self._row(main, "Mostrar o texto", self._switch("notif_show_body"),
                   "Desligado: só o título aparece, para mais privacidade")
+        self._row(main, "Avisar quando o Claude Code pedir algo", self._switch("claude_attention"),
+                  "Se a sessão entrar em outro estado além de trabalhando e aguardando")
+        self._row(main, "Mostrar o gasto do dia do Claude Code",
+                  self._switch("claude_pill_cost"),
+                  "Valor estimado em dólar, ao lado do relógio")
+        self._row(main, "Limite diário do Claude Code (US$)",
+                  self._spin("claude_daily_limit", 0, 1000, 1),
+                  "0 desliga. Ao passar do valor, o gasto fica vermelho e a ilha avisa uma vez por dia")
+
+        hist = self._group(page, "Histórico")
+        self._row(hist, "Guardar o histórico", self._switch("notif_history"),
+                  "Só na memória: some ao reiniciar a ilha. Desligar apaga o que já foi guardado")
+        self._row(hist, "Quantas guardar", self._spin("notif_history_max", 10, 200, 10))
 
         ignore = self._group(page, "Apps ignorados")
         entry = Gtk.Entry(text=self.cfg["notif_ignore"], placeholder_text=_("Ex.: Spotify, Slack"))
@@ -248,3 +264,71 @@ class SettingsPagesMixin:
         self.sp_button.set_label(_("Desconectar") if connected else _("Conectar"))
         bctx = self.sp_button.get_style_context()
         (bctx.remove_class if connected else bctx.add_class)("suggested")
+
+    # --- foco / pomodoro -------------------------------------------------------
+    def _page_focus(self):
+        scroll, page = self._page()
+        intro = Gtk.Label(xalign=0, wrap=True)
+        intro.set_text(_("Ciclos de foco e pausa. Enquanto roda, a pílula mostra o tempo que "
+                         "falta; no fim, ela avisa e toca um som."))
+        intro.get_style_context().add_class("dim-label")
+        page.pack_start(intro, False, False, 0)
+        g = self._group(page, "Pomodoro")
+        self._row(g, "Foco (min)", self._spin("pomo_focus_min", 1, 180))
+        self._row(g, "Pausa curta (min)", self._spin("pomo_short_min", 1, 60))
+        self._row(g, "Pausa longa (min)", self._spin("pomo_long_min", 1, 120))
+        self._row(g, "Focos até a pausa longa", self._spin("pomo_rounds", 2, 8))
+        self._row(g, "Tocar um som no fim", self._switch("pomo_sound"))
+        self._row(g, "Começar a próxima fase sozinho", self._switch("pomo_auto_next"),
+                  "Desligado: espera você iniciar depois de cada fase")
+        return scroll
+
+    # --- páginas da ilha: ordem e visibilidade -----------------------------------
+    def _pages_group(self, page):
+        from pages import PAGE_TITLES  # evita importar a janela da ilha ao abrir só o módulo
+        listbox = self._group(page, "Páginas da ilha")
+        state = {"pending": False}
+
+        def toggle(name, on):
+            hidden = {p for p in pagelist.split(self.cfg["pages_hidden"])}
+            hidden.discard(name) if on else hidden.add(name)
+            self.cfg.set("pages_hidden",
+                         ",".join(p for p in pagelist.ALL_PAGES if p in hidden))
+
+        def move(name, step):
+            self.cfg.set("pages_order", pagelist.move(self.cfg["pages_order"], name, step))
+
+        def rebuild():
+            state["pending"] = False
+            for row in listbox.get_children():
+                listbox.remove(row)
+            order = pagelist.order(self.cfg["pages_order"])
+            hidden = set(pagelist.split(self.cfg["pages_hidden"]))
+            for i, name in enumerate(order):
+                box = Gtk.Box(spacing=2)
+                for icon, step, ok in (("go-up-symbolic", -1, i > 0),
+                                       ("go-down-symbolic", 1, i < len(order) - 1)):
+                    b = Gtk.Button.new_from_icon_name(icon, Gtk.IconSize.BUTTON)
+                    b.set_relief(Gtk.ReliefStyle.NONE)
+                    b.set_sensitive(ok)
+                    b.connect("clicked", lambda _b, n=name, st=step: move(n, st))
+                    box.pack_start(b, False, False, 0)
+                sw = Gtk.Switch(active=name not in hidden)
+                sw.set_sensitive(name not in pagelist.ALWAYS_SHOWN)
+                sw.set_valign(Gtk.Align.CENTER)
+                sw.set_margin_start(8)
+                sw.connect("notify::active", lambda w, _p, n=name: toggle(n, w.get_active()))
+                box.pack_start(sw, False, False, 0)
+                self._row(listbox, PAGE_TITLES[name], box)
+            listbox.show_all()
+            return False
+
+        def schedule():
+            # reconstruir dentro do próprio sinal do botão apagaria o botão no meio do clique
+            if not state["pending"]:
+                state["pending"] = True
+                GLib.idle_add(rebuild)
+
+        rebuild()
+        self._sync["pages_order"] = schedule
+        self._sync["pages_hidden"] = schedule

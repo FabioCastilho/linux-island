@@ -7,13 +7,20 @@ from datetime import datetime
 
 from gi.repository import Gio, Gtk
 
+import anim
+import pagelist
+from i18n import _
+from icons import glyph_button
 from notifications import OWN_APP, parse_ignore
 
 from pointer import log
 from water import play_sound
 
-TRANSITION_MS = 320
-PAGES = ("home", "water", "agenda")  # páginas da ilha expandida, na ordem do arrasto
+TRANSITION_MS = 320            # duração-base; o valor real passa por anim.ms()
+PAGES = pagelist.ALL_PAGES     # todas as páginas existentes (as visíveis vêm de _page_names)
+PAGE_TITLES = {"home": "Início", "water": "Água", "agenda": "Agenda", "notifs": "Notificações",
+               "focus": "Foco", "tasks": "Tarefas", "camera": "Câmera", "bluetooth": "Bluetooth",
+               "system": "Sistema", "claude": "Claude Code", "sessions": "Sessões"}
 
 
 class PagesMixin:
@@ -24,49 +31,128 @@ class PagesMixin:
         self.pages.set_homogeneous(False)
         self.pages.set_interpolate_size(True)
         self.pages.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
-        self.pages.set_transition_duration(TRANSITION_MS)
-        self.pages.add_named(self.full, "home")
-        self.pages.add_named(self.water_page, "water")
-        self.pages.add_named(self.agenda_page, "agenda")
+        anim.register(self.pages, TRANSITION_MS)
+        for name, widget in (("home", self.full), ("water", self.water_page),
+                             ("agenda", self.agenda_page), ("notifs", self.notifs_page),
+                             ("focus", self.focus_page), ("tasks", self.tasks_page),
+                             ("camera", self.camera_page), ("bluetooth", self.bluetooth_page),
+                             ("system", self.system_page), ("claude", self.claude_page),
+                             ("sessions", self.sessions_page)):
+            self.pages.add_named(widget, name)
         box.pack_start(self.pages, False, False, 0)
 
-        dots = Gtk.Box(spacing=6)
-        dots.set_halign(Gtk.Align.CENTER)
-        dots.set_margin_bottom(10)
+        self.dots_box = Gtk.Box(spacing=6)
+        self.dots_box.set_halign(Gtk.Align.CENTER)
+        self.dots_box.set_valign(Gtk.Align.CENTER)
         self.dots = {}
         for name in PAGES:
             dot = Gtk.Button()
             dot.set_can_focus(False)
+            dot.set_no_show_all(True)  # quem mostra ou esconde é _apply_pages
+            dot.set_tooltip_text(_(PAGE_TITLES[name]))
             dot.get_style_context().add_class("page-dot")
             dot.connect("clicked", lambda _b, n=name: self.set_page(n))
-            dots.pack_start(dot, False, False, 0)
+            self.dots_box.pack_start(dot, False, False, 0)
             self.dots[name] = dot
-        box.pack_start(dots, False, False, 0)
+        # faixa de baixo: setas nos cantos e os pontinhos no meio. Os pontinhos são minúsculos;
+        # um clique que erra cairia no fundo da ilha e a fecharia. Por isso a faixa toda
+        # engole cliques (EventBox) e só os botões reagem.
+        foot = Gtk.Box(spacing=6)
+        foot.set_margin_start(10)
+        foot.set_margin_end(10)
+        foot.set_margin_top(2)
+        foot.set_margin_bottom(6)
+        self.prev_btn, _g = glyph_button("left", 14, lambda: self.turn_page(-1),
+                                         _("Página anterior"))
+        self.next_btn, _g = glyph_button("right", 14, lambda: self.turn_page(1),
+                                         _("Próxima página"))
+        foot.pack_start(self.prev_btn, False, False, 0)
+        foot.pack_start(self.dots_box, True, True, 0)
+        foot.pack_end(self.next_btn, False, False, 0)
+        catcher = Gtk.EventBox()
+        catcher.set_visible_window(False)
+        catcher.add(foot)
+        for sig in ("button-press-event", "button-release-event"):
+            catcher.connect(sig, lambda *_a: True)
+        self.foot = catcher
+        box.pack_start(catcher, False, False, 0)
+        self._apply_pages()
         self._mark_dot("home")
         return box
+
+    def _page_names(self):
+        """Páginas visíveis, na ordem escolhida nas configurações. O Bluetooth só entra se o PC
+        tiver um adaptador (some sozinho num desktop sem Bluetooth)."""
+        names = pagelist.visible(self.cfg["pages_order"], self.cfg["pages_hidden"])
+        bt = getattr(self, "bluetooth", None)
+        return [n for n in names if n != "bluetooth" or (bt and bt.available)]
+
+    def _apply_pages(self):
+        """Pontinhos na ordem e só das páginas visíveis; sai da página se ela foi escondida."""
+        names = self._page_names()
+        for i, name in enumerate(names):
+            self.dots_box.reorder_child(self.dots[name], i)
+            self.dots[name].show()
+        for name, dot in self.dots.items():
+            if name not in names:
+                dot.hide()
+        self.foot.set_visible(len(names) > 1)
+        cur = self.pages.get_visible_child_name()
+        if cur not in names and not getattr(self, "_page_forced", False):
+            self.set_page("home")
+        self._update_arrows()
+        self._follow_size()
 
     def _mark_dot(self, name):
         for n, dot in self.dots.items():
             ctx = dot.get_style_context()
             (ctx.add_class if n == name else ctx.remove_class)("active")
 
-    def set_page(self, name):
-        if name == self.pages.get_visible_child_name():
+    def set_page(self, name, forced=False):
+        """forced: página pedida de fora (linha de comando) mesmo que esteja escondida."""
+        cur = self.pages.get_visible_child_name()
+        if name == cur or name not in PAGES:
             return
+        self._page_forced = forced
         if name == "water":
             self.water_page.update(self.cfg)
         elif name == "agenda":
             self.agenda_page.update(self.cfg)
         log("page", name)
-        self.pages.set_visible_child_name(name)
+        names = self._page_names()
+        # a direção do deslize segue a ordem escolhida (o Stack só conhece a ordem de criação)
+        forward = (names.index(name) > names.index(cur)
+                   if name in names and cur in names else True)
+        self.pages.set_visible_child_full(
+            name, Gtk.StackTransitionType.SLIDE_LEFT if forward
+            else Gtk.StackTransitionType.SLIDE_RIGHT)
         self._mark_dot(name)
+        self._update_arrows()
+        self._update_keyboard()
+        self._update_badges()
         self._follow_size()
+
+    def _update_arrows(self):
+        """As setas apagam nas pontas (primeira e última página visíveis)."""
+        names = self._page_names()
+        cur = self.pages.get_visible_child_name()
+        i = names.index(cur) if cur in names else 0
+        self.prev_btn.set_sensitive(i > 0)
+        self.next_btn.set_sensitive(i < len(names) - 1)
 
     def turn_page(self, step):
         """step=+1 próxima página (arrastar para a esquerda), -1 anterior."""
-        i = PAGES.index(self.pages.get_visible_child_name()) + step
-        if 0 <= i < len(PAGES):
-            self.set_page(PAGES[i])
+        names = self._page_names()
+        cur = self.pages.get_visible_child_name()
+        i = (names.index(cur) if cur in names else 0) + step
+        if 0 <= i < len(names):
+            self.set_page(names[i])
+
+    def _update_badges(self):
+        """Pontinho da página Notificações fica em destaque quando há não lidas."""
+        ctx = self.dots["notifs"].get_style_context()
+        unread = self.notif_history.unread > 0 and self.pages.get_visible_child_name() != "notifs"
+        (ctx.add_class if unread else ctx.remove_class)("has-badge")
 
     def _alert_page(self):
         """Página do alerta mais importante (reunião > água), ou a inicial."""
@@ -75,11 +161,13 @@ class PagesMixin:
         return "water" if self.water.alerting else "home"
 
     def _refresh_middle(self):
-        """Miolo da pílula: notificação > faixa nova > reunião > água > relógio."""
+        """Miolo da pílula: notificação > faixa nova > fim do foco > reunião > água > relógio."""
         if "notif_peek" in self._timers:
             name = "notif"
         elif "track_peek" in self._timers:
             name = "track"
+        elif "focus_alert" in self._timers:
+            name = "focus"
         elif self.agenda.alert:
             self.meeting_pill.update(self.agenda.alert, datetime.now().astimezone())
             name = "meeting"
@@ -88,14 +176,18 @@ class PagesMixin:
         else:
             name = "info"
         self.compact.middle.set_visible_child_name(name)
+        if name != "info":
+            self.autohide_poke()  # algo a mostrar: a ilha desce se estava escondida
         self._follow_size()
 
     # --- notificações de outros apps ----------------------------------------
     def _on_notification(self, n):
         cfg = self.cfg
-        if (not cfg["notif_enabled"] or cfg["notif_dnd"] or self.expanded
-                or n.app.lower() == OWN_APP
-                or n.app.lower() in parse_ignore(cfg["notif_ignore"])):
+        if n.app.lower() == OWN_APP or n.app.lower() in parse_ignore(cfg["notif_ignore"]):
+            return
+        if cfg["notif_history"]:  # o histórico guarda também o que o não-perturbe silenciou
+            self.notif_history.add(n)
+        if not cfg["notif_enabled"] or cfg["notif_dnd"] or self.expanded:
             return
         log("notificação", n.app)
         last = self._notif_queue[-1] if self._notif_queue else self._notif_current
