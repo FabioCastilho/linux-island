@@ -316,6 +316,15 @@ def build_css(cfg):
   background: {css_color(fg, 0.08)}; color: {css_color(fg)}; border: none; box-shadow: none;
   border-radius: 999px; padding: 4px 12px; font-size: 11px;
 }}
+.island switch {{
+  background: {css_color(fg, 0.18)}; border: none; border-radius: 999px; min-width: 42px;
+  min-height: 24px; box-shadow: none;
+}}
+.island switch:checked {{ background: {css_color(rgba(cfg["accent_color"]))}; }}
+.island switch slider {{
+  background: #ffffff; border: none; border-radius: 999px; min-width: 20px; min-height: 20px;
+  margin: 2px; box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}}
 .island .row-card {{ background: {css_color(fg, 0.05)}; border-radius: 14px; padding: 8px 10px; }}
 .island .row-card.unread {{ background: {css_color(fg, 0.09)}; }}
 .island .row-card.done .row-title {{ color: {css_color(fg, 0.45)}; }}

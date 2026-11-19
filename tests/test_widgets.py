@@ -317,6 +317,19 @@ class WidgetTests(unittest.TestCase):
         page.show_error("falhou")
         self.assertEqual(page.error.get_text(), "falhou")
 
+    def test_generated_island_css_is_valid_for_every_builtin_theme(self):
+        """Uma propriedade que o GTK 3 não conhece faria o CSS inteiro falhar ao carregar."""
+        import config
+        import themes
+        for theme in themes.BUILTIN:
+            cfg = make_cfg()
+            cfg.update(theme["values"])
+            provider = Gtk.CssProvider()
+            errors = []
+            provider.connect("parsing-error", lambda _p, _s, e: errors.append(e.message))
+            provider.load_from_data(config.build_css(cfg).encode())
+            self.assertEqual(errors, [], theme["name"])
+
     def test_system_page_builds_and_ticks(self):
         from system_view import SystemPage
         page = SystemPage(make_cfg())
