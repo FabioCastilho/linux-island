@@ -770,5 +770,46 @@ class GoogleCalendarWriteTests(unittest.TestCase):
         self.assertIn("create_event", public)
 
 
+class BrandDetectionTests(unittest.TestCase):
+    def test_url_wins_and_matches_subdomains(self):
+        import brands
+        self.assertEqual(brands.detect("x", "https://www.youtube.com/watch?v=1"), "youtube")
+        self.assertEqual(brands.detect("x", "https://m.youtube.com/watch?v=1"), "youtube")
+        self.assertEqual(brands.detect("x", "https://youtu.be/abc"), "youtube")
+        self.assertEqual(brands.detect("x", "https://music.youtube.com/watch?v=1"), "youtube_music")
+        self.assertEqual(brands.detect("x", "https://web.whatsapp.com/"), "whatsapp")
+
+    def test_title_suffix_works_without_url(self):
+        import brands
+        self.assertEqual(brands.detect("Minha OPINIÃO sobre GTA 6 - YouTube", ""), "youtube")
+        self.assertEqual(brands.detect("Lofi - YouTube Music", ""), "youtube_music")
+        self.assertEqual(brands.detect("WhatsApp", ""), "whatsapp")
+
+    def test_lookalike_domains_and_plain_music_are_not_brands(self):
+        import brands
+        for title, url in (("Música", ""), ("x", "https://notyoutube.com/a"),
+                           ("x", "https://evil.com/youtube.com"), ("x", "https://youtube.com.evil.io/"),
+                           ("Song", "https://open.spotify.com/track/1"), ("", ""), (None, None),
+                           ("x", "http://[bad")):
+            self.assertIsNone(brands.detect(title, url), (title, url))
+
+    def test_music_services_are_detected_and_flagged_as_music(self):
+        import brands
+        self.assertEqual(brands.detect("x", "https://www.deezer.com/br/track/1"), "deezer")
+        self.assertEqual(brands.detect("x", "https://music.apple.com/br/album/1"), "apple_music")
+        self.assertEqual(brands.detect("Faixa - Deezer", ""), "deezer")
+        for b in ("youtube_music", "deezer", "apple_music"):
+            self.assertIn(b, brands.MUSIC)
+        for b in ("youtube", "whatsapp", "twitch", "netflix", "telegram"):
+            self.assertNotIn(b, brands.MUSIC)  # vídeo e chat: sempre a logo
+
+    def test_every_brand_has_a_logo_and_a_color(self):
+        import brands
+        names = set(brands.DRAW)
+        self.assertEqual(names, set(brands.COLORS))
+        for _h, b in brands.HOSTS + brands.TITLE_SUFFIXES:
+            self.assertIn(b, names)
+
+
 if __name__ == "__main__":
     unittest.main()

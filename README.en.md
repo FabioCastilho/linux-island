@@ -35,6 +35,10 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 <img src="docs/screenshots/player_blur_dark.png" width="32%"> <img src="docs/screenshots/claude_chart.png" width="32%"> <img src="docs/screenshots/camera_page.png" width="32%">
 </p>
 
+**Music cover:** browsers send random cover art, so when what's playing comes from a known service the island shows its logo: YouTube, WhatsApp, Twitch, Netflix and Telegram always; YouTube Music, Deezer and Apple Music show the album cover and fall back to the logo only if the player sends none. Spotify and local players keep their own cover.
+
+![service logos](docs/screenshots/logos_servicos.png)
+
 **Navigation:** the bottom strip has one icon per page. The current one is highlighted, the Notifications bell turns orange when there are unread ones, and hovering shows the page name.
 
 ![page strip](docs/screenshots/pagina_icones.png)

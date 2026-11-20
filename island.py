@@ -60,6 +60,7 @@ from claude_sessions import read_sessions  # noqa: E402
 from notifications import Notification  # noqa: E402
 from sessions_view import SessionsPage  # noqa: E402
 from system_view import CpuSampler, SystemPage  # noqa: E402
+import brands  # noqa: E402
 from agenda import Agenda  # noqa: E402
 from agenda_view import AgendaPage, MeetingPill  # noqa: E402
 from weather import Weather  # noqa: E402
@@ -582,6 +583,7 @@ class Island(NotchMixin, AutoHideMixin, PagesMixin, InputMixin, Gtk.Window):
     def _on_track(self, track):
         prev = self.full.title.get_text() if self.full.music_rev.get_reveal_child() else ""
         self.full.set_track(track)
+        self._show_art()
         if track:
             self.compact.set_track_text(track.title, track.artist)
         self.compact.set_music(track is not None, self.player.playing)
@@ -638,10 +640,26 @@ class Island(NotchMixin, AutoHideMixin, PagesMixin, InputMixin, Gtk.Window):
                 pb = GdkPixbuf.Pixbuf.new_from_file(path)
             except GLib.Error as e:
                 print(f"[island] capa inválida: {e.message}")
-        self.compact.art.set_source(pb)
-        self.full.art.set_source(pb)
+        self._art_pixbuf = pb
+        self._show_art()
+
+    def _show_art(self):
+        """Capa do que toca. Serviços conhecidos (YouTube, WhatsApp...) viram a logo, sempre a
+        mesma; senão vale a capa do player (álbum) ou o círculo padrão."""
+        t = self.player.track
+        brand = brands.detect(t.title, t.url) if t else None
+        cover = getattr(self, "_art_pixbuf", None)
+        if brand in brands.MUSIC and cover:
+            brand = None  # música: a capa do álbum vale mais que a logo
+        pb = None if brand else cover
+        for art in (self.compact.art, self.full.art):
+            art.set_brand(brand)
+            art.set_source(pb)
         self.full.set_art_pixbuf(pb)
-        self._art_accent = accent_from_pixbuf(pb) if pb else None
+        if brand:
+            self._art_accent = brands.COLORS[brand]
+        else:
+            self._art_accent = accent_from_pixbuf(pb) if pb else None
         self._apply_accent()
 
     def _tick_music(self):

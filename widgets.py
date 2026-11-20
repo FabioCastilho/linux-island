@@ -37,6 +37,7 @@ class Art(Gtk.DrawingArea):
         super().__init__()
         self.size, self.radius = size, radius
         self.pixbuf = None
+        self.brand = None  # logo de um serviço (brands.py); tem prioridade sobre a capa
         self.glow = None  # (r, g, b) ou None; só a capa grande usa
         self._pad = 0
         self.set_size_request(size, size)
@@ -51,6 +52,12 @@ class Art(Gtk.DrawingArea):
             self._pad = pad
             self.set_size_request(self.size + 2 * pad, self.size + 2 * pad)
         self.queue_draw()
+
+    def set_brand(self, name):
+        """Mostra a logo do serviço (YouTube, WhatsApp...) no lugar da capa; None volta à capa."""
+        if name != self.brand:
+            self.brand = name
+            self.queue_draw()
 
     def set_source(self, original):
         self.pixbuf = (original.scale_simple(self.size * 2, self.size * 2,
@@ -69,7 +76,14 @@ class Art(Gtk.DrawingArea):
         cr.translate(pad, pad)
         rounded_rect(cr, 0, 0, s, s, self.radius)
         cr.clip()
-        if self.pixbuf:
+        if self.brand:
+            from brands import DRAW
+            cr.set_source_rgb(0.12, 0.12, 0.13)
+            cr.paint()
+            cr.translate(s * 0.14, s * 0.14)  # a logo ocupa o miolo, com folga nas bordas
+            cr.scale(s * 0.72, s * 0.72)
+            DRAW[self.brand](cr)
+        elif self.pixbuf:
             cr.scale(0.5, 0.5)
             Gdk.cairo_set_source_pixbuf(cr, self.pixbuf, 0, 0)
             cr.paint()

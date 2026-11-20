@@ -30,6 +30,7 @@ class Track:
         self.album = md.get("xesam:album", "") or ""
         self.length = int(md.get("mpris:length", 0) or 0)  # microssegundos
         self.art_url = md.get("mpris:artUrl", "") or ""
+        self.url = md.get("xesam:url", "") or ""  # página (navegadores): revela o serviço
 
     def key(self):
         return (self.trackid, self.title, self.artist)
