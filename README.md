@@ -35,6 +35,10 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 <img src="docs/screenshots/player_blur_dark.png" width="32%"> <img src="docs/screenshots/claude_chart.png" width="32%"> <img src="docs/screenshots/camera_page.png" width="32%">
 </p>
 
+**Navegação:** a faixa de baixo tem um ícone por página. A atual fica destacada, o sino de Notificações fica laranja quando há não lidas, e passar o mouse mostra o nome da página.
+
+![faixa de páginas](docs/screenshots/pagina_icones.png)
+
 **Aparência:** temas embutidos e temas seus (salvar, importar e exportar em JSON), **claro/escuro automático** (seguindo o KDE ou por horário), **cor de destaque do KDE**, estilo "entalhe" colado no topo com curva ajustável, efeito vidro com desfoque do KDE, 5 estilos de equalizador, brilho ou fundo desfocado a partir da capa do álbum, velocidade das animações e interface em português, inglês e espanhol.
 
 ## Instalação

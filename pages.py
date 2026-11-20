@@ -10,7 +10,7 @@ from gi.repository import Gio, Gtk
 import anim
 import pagelist
 from i18n import _
-from icons import glyph_button
+from icons import Glyph, glyph_button
 from notifications import OWN_APP, parse_ignore
 
 from pointer import log
@@ -21,6 +21,10 @@ PAGES = pagelist.ALL_PAGES     # todas as páginas existentes (as visíveis vêm
 PAGE_TITLES = {"home": "Início", "water": "Água", "agenda": "Agenda", "notifs": "Notificações",
                "focus": "Foco", "tasks": "Tarefas", "camera": "Câmera", "bluetooth": "Bluetooth",
                "system": "Sistema", "claude": "Claude Code", "sessions": "Sessões"}
+# ícone de cada página na faixa de baixo (glifos próprios de icons.py)
+PAGE_GLYPHS = {"home": "home", "water": "drop", "agenda": "calendar", "notifs": "bell",
+               "focus": "timer", "tasks": "tasks", "camera": "camera", "bluetooth": "bluetooth",
+               "system": "chip", "claude": "terminal", "sessions": "layers"}
 
 
 class PagesMixin:
@@ -41,7 +45,7 @@ class PagesMixin:
             self.pages.add_named(widget, name)
         box.pack_start(self.pages, False, False, 0)
 
-        self.dots_box = Gtk.Box(spacing=6)
+        self.dots_box = Gtk.Box(spacing=0)
         self.dots_box.set_halign(Gtk.Align.CENTER)
         self.dots_box.set_valign(Gtk.Align.CENTER)
         self.dots = {}
@@ -51,6 +55,9 @@ class PagesMixin:
             dot.set_no_show_all(True)  # quem mostra ou esconde é _apply_pages
             dot.set_tooltip_text(_(PAGE_TITLES[name]))
             dot.get_style_context().add_class("page-dot")
+            glyph = Glyph(PAGE_GLYPHS[name], 15)
+            dot.add(glyph)
+            glyph.show()  # o botão é no_show_all: sem isto o ícone ficaria escondido
             dot.connect("clicked", lambda _b, n=name: self.set_page(n))
             self.dots_box.pack_start(dot, False, False, 0)
             self.dots[name] = dot

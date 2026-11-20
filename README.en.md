@@ -35,6 +35,10 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 <img src="docs/screenshots/player_blur_dark.png" width="32%"> <img src="docs/screenshots/claude_chart.png" width="32%"> <img src="docs/screenshots/camera_page.png" width="32%">
 </p>
 
+**Navigation:** the bottom strip has one icon per page. The current one is highlighted, the Notifications bell turns orange when there are unread ones, and hovering shows the page name.
+
+![page strip](docs/screenshots/pagina_icones.png)
+
 **Look:** built-in themes and your own (save, import and export as JSON), **automatic light/dark** (following KDE or by time of day), **KDE accent color**, a "notch" style glued to the top with an adjustable curve, glass effect with KDE blur, 5 equalizer styles, a glow or blurred background from the album art, animation speed, and a Portuguese, English and Spanish interface.
 
 ## Installation

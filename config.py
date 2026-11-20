@@ -285,11 +285,12 @@ def build_css(cfg):
 }}
 .island button.agenda-row:hover {{ background: {css_color(fg, 0.07)}; }}
 .island button.page-dot {{
-  min-width: 6px; min-height: 6px; padding: 0; border: none; box-shadow: none;
-  border-radius: 999px; background: {css_color(fg, 0.25)};
+  padding: 5px 6px; border: none; box-shadow: none; border-radius: 10px;
+  background: transparent; color: {css_color(fg, 0.42)};
 }}
-.island button.page-dot.active {{ background: {css_color(fg, 0.9)}; min-width: 16px; }}
-.island button.page-dot.has-badge {{ background: {FO}; }}
+.island button.page-dot:hover {{ background: {css_color(fg, 0.08)}; color: {css_color(fg, 0.85)}; }}
+.island button.page-dot.active {{ background: {css_color(fg, 0.14)}; color: {css_color(fg, 1.0)}; }}
+.island button.page-dot.has-badge {{ color: {FO}; }}
 .island.focus-alert {{ border-color: {FO}; }}
 .island button.power-btn {{
   background: {css_color(fg, 0.08)}; color: {css_color(fg)}; border: none; box-shadow: none;
