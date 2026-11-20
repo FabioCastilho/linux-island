@@ -70,6 +70,7 @@ SCHEMA = {
     "water_sound_volume": (70, _int_range(0, 100)),
     # agenda (Google Calendar, agenda principal)
     "agenda_enabled": (True, _is_bool),
+    "agenda_write": (False, _is_bool),  # opt-in: pede permissão de criar eventos ao Google
     "agenda_alert": (True, _is_bool),
     "agenda_lead_min": (10, _int_range(0, 60)),
     "agenda_days": (3, _int_range(1, 7)),

@@ -18,7 +18,7 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 |---|---|
 | **Home** | Clock, weather forecast and media control (any MPRIS player: Spotify, browser, VLC…). |
 | **Water** | Drink-water reminder with a daily goal. |
-| **Agenda** | Upcoming Google Calendar events (read-only) and an alert before meetings. |
+| **Agenda** | Upcoming Google Calendar events and an alert before meetings. Optional: create events from the island. |
 | **Notifications** | History of recent notifications with an unread badge. Memory only. |
 | **Focus** | Pomodoro and timer, with a counter in the pill and a sound alert at the end. |
 | **Tasks** | A quick task list, stored locally. |
@@ -77,7 +77,7 @@ The island is single-instance: running `run.sh` again with an option talks to th
 
 There is no telemetry. What the island reads and accesses:
 
-* **Network, only what you use:** weather from [Open-Meteo](https://open-meteo.com); **if you don't set a city, the approximate location comes from your IP via `ipwho.is`**; Spotify (optional, with your own Client ID) and Google Calendar (optional, read-only, OAuth login in the browser).
+* **Network, only what you use:** weather from [Open-Meteo](https://open-meteo.com); **if you don't set a city, the approximate location comes from your IP via `ipwho.is`**; Spotify (optional, with your own Client ID) and Google Calendar (optional, OAuth login in the browser; **read-only by default**, and it only creates events if you turn on "Allow creating events" in Settings > Calendar. The app never edits or deletes events).
 * **Tokens** are kept in the system keyring (libsecret); without a keyring, in a file with `0600` permissions.
 * **Local, never sent:** notifications (D-Bus), Claude Code history and sessions (`~/.claude`, read-only), CPU/RAM/network usage.
 * **Camera and microphone:** the island only turns them on for the test, when you click, and nothing is recorded. The indicator just observes PipeWire and `/proc`.

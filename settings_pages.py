@@ -76,7 +76,8 @@ class SettingsPagesMixin:
         intro = Gtk.Label(xalign=0, wrap=True)
         intro.set_markup(_("Mostra os eventos da sua agenda principal do <b>Google</b> e avisa "
                          "antes das reuniões. Funciona com contas pessoais e corporativas; "
-                         "o acesso é <b>somente leitura</b>."))
+                         "o acesso é <b>somente leitura</b>, a menos que você libere a "
+                         "criação de eventos abaixo."))
         intro.get_style_context().add_class("dim-label")
         page.pack_start(intro, False, False, 0)
 
@@ -99,6 +100,11 @@ class SettingsPagesMixin:
             self.agenda.disconnect() if self.agenda.connected else self.agenda.login()))
         self._row(account, "Status", self.ag_button).get_children()[0].pack_start(
             self.ag_status, False, False, 0)
+
+        write = self._group(page, "Criar eventos")
+        self._row(write, "Permitir criar eventos", self._switch("agenda_write"),
+                  "Pede ao Google a permissão de eventos. O app só cria, nunca edita nem "
+                  "apaga. Desligar revoga a permissão e você reconecta em modo leitura.")
 
         show = self._group(page, "Exibição")
         self._row(show, "Mostrar agenda", self._switch("agenda_enabled"))

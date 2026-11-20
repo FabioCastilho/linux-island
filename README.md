@@ -18,7 +18,7 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 |---|---|
 | **Início** | Relógio, previsão do tempo e controle de mídia (qualquer player MPRIS: Spotify, navegador, VLC…). |
 | **Água** | Lembrete de beber água com meta diária. |
-| **Agenda** | Próximos eventos do Google Calendar (somente leitura) e aviso antes das reuniões. |
+| **Agenda** | Próximos eventos do Google Calendar e aviso antes das reuniões. Opcional: criar eventos pela ilha. |
 | **Notificações** | Histórico das últimas notificações, com selo de não lidas. Só na memória. |
 | **Foco** | Pomodoro e timer, com contador na pílula e aviso com som no fim. |
 | **Tarefas** | Lista rápida de tarefas, salva localmente. |
@@ -77,7 +77,7 @@ A ilha é de instância única: rodar `run.sh` de novo com uma opção fala com 
 
 Não há telemetria. O que a ilha lê e acessa:
 
-* **Rede, só o que você usa:** clima pela [Open-Meteo](https://open-meteo.com); **se você não informar a cidade, a localização aproximada vem do IP via `ipwho.is`**; Spotify (opcional, com o seu Client ID) e Google Calendar (opcional, somente leitura, login OAuth no navegador).
+* **Rede, só o que você usa:** clima pela [Open-Meteo](https://open-meteo.com); **se você não informar a cidade, a localização aproximada vem do IP via `ipwho.is`**; Spotify (opcional, com o seu Client ID) e Google Calendar (opcional, login OAuth no navegador; **somente leitura por padrão**, e só cria eventos se você ligar "Permitir criar eventos" em Configurações > Agenda. O app nunca edita nem apaga eventos).
 * **Tokens** ficam no chaveiro do sistema (libsecret); sem chaveiro, num arquivo com permissão `0600`.
 * **Local, nunca enviado:** as notificações (D-Bus), o histórico e as sessões do Claude Code (`~/.claude`, somente leitura), o uso de CPU/RAM/rede.
 * **Câmera e microfone:** a ilha só os liga no teste, quando você clica, e nada é gravado. O indicador apenas observa o PipeWire e o `/proc`.

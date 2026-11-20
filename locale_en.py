@@ -214,10 +214,8 @@ EN = {
     "Nomes dos apps, separados por vírgula": "App names, separated by commas",
     "Ex.: Spotify, Slack": "E.g. Spotify, Slack",
     # agenda settings
-    "Mostra os eventos da sua agenda principal do <b>Google</b> e avisa antes das reuniões. "
-    "Funciona com contas pessoais e corporativas; o acesso é <b>somente leitura</b>.":
-        "Shows the events of your main <b>Google</b> calendar and alerts you before meetings. "
-        "Works with personal and work accounts; access is <b>read-only</b>.",
+    "Mostra os eventos da sua agenda principal do <b>Google</b> e avisa antes das reuniões. Funciona com contas pessoais e corporativas; o acesso é <b>somente leitura</b>, a menos que você libere a criação de eventos abaixo.":
+        "Shows the events of your main <b>Google</b> calendar and alerts you before meetings. Works with personal and work accounts; access is <b>read-only</b> unless you allow event creation below.",
     "Conta Google": "Google account",
     "As credenciais do app do Google não estão configuradas nesta instalação — veja a seção "
     "<b>Agenda</b> do README.":
@@ -237,6 +235,29 @@ EN = {
     "Som": "Sound",
     "Volume (%)": "Volume (%)",
     "Testar": "Test",
+    # agenda: criar eventos
+    "Criar eventos": "Create events",
+    "Permitir criar eventos": "Allow creating events",
+    "Pede ao Google a permissão de eventos. O app só cria, nunca edita nem apaga. Desligar revoga a permissão e você reconecta em modo leitura.": "Asks Google for event permission. The app only creates, never edits or deletes. Turning it off revokes the permission and you reconnect in read-only mode.",
+    "Novo evento": "New event",
+    "Título": "Title",
+    "Data": "Date",
+    "Duração (min)": "Duration (min)",
+    "Dia inteiro": "All day",
+    "hoje, amanhã, 25/12…": "today, tomorrow, 25/12…",
+    "Revisar": "Review",
+    "Voltar": "Back",
+    "Criar evento": "Create event",
+    "Criar este evento na sua agenda principal do Google?": "Create this event in your main Google calendar?",
+    "Criando…": "Creating…",
+    "Evento criado!": "Event created!",
+    "Data inválida. Use hoje, amanhã, 25/12 ou 25/12/2026.": "Invalid date. Use today, tomorrow, 25/12 or 25/12/2026.",
+    "Hora inválida. Use 14:30.": "Invalid time. Use 14:30.",
+    "Informe um título (até 200 caracteres) e uma duração válida.": "Enter a title (up to 200 characters) and a valid duration.",
+    "dia inteiro": "all day",
+    "Criação de eventos desligada ou sem permissão": "Event creation is off or not permitted",
+    "Falha ao criar o evento: {erro}": "Failed to create the event: {erro}",
+    "sem permissão para criar eventos": "no permission to create events",
     # sounds
     "Mensagem": "Message",
     "Concluído": "Complete",

@@ -216,11 +216,8 @@ ES = {
     "Nomes dos apps, separados por vírgula": "Nombres de las apps, separados por comas",
     "Ex.: Spotify, Slack": "Ej.: Spotify, Slack",
     # ajustes de agenda
-    "Mostra os eventos da sua agenda principal do <b>Google</b> e avisa antes das reuniões. "
-    "Funciona com contas pessoais e corporativas; o acesso é <b>somente leitura</b>.":
-        "Muestra los eventos de tu agenda principal de <b>Google</b> y avisa antes de las "
-        "reuniones. Funciona con cuentas personales y de empresa; el acceso es "
-        "<b>solo lectura</b>.",
+    "Mostra os eventos da sua agenda principal do <b>Google</b> e avisa antes das reuniões. Funciona com contas pessoais e corporativas; o acesso é <b>somente leitura</b>, a menos que você libere a criação de eventos abaixo.":
+        "Muestra los eventos de tu agenda principal de <b>Google</b> y avisa antes de las reuniones. Funciona con cuentas personales y de empresa; el acceso es <b>solo lectura</b>, salvo que habilites abajo la creación de eventos.",
     "Conta Google": "Cuenta de Google",
     "As credenciais do app do Google não estão configuradas nesta instalação — veja a seção "
     "<b>Agenda</b> do README.":
@@ -241,6 +238,29 @@ ES = {
     "Som": "Sonido",
     "Volume (%)": "Volumen (%)",
     "Testar": "Probar",
+    # agenda: criar eventos
+    "Criar eventos": "Crear eventos",
+    "Permitir criar eventos": "Permitir crear eventos",
+    "Pede ao Google a permissão de eventos. O app só cria, nunca edita nem apaga. Desligar revoga a permissão e você reconecta em modo leitura.": "Pide a Google el permiso de eventos. La app solo crea, nunca edita ni borra. Al desactivarlo se revoca el permiso y te reconectas en modo solo lectura.",
+    "Novo evento": "Nuevo evento",
+    "Título": "Título",
+    "Data": "Fecha",
+    "Duração (min)": "Duración (min)",
+    "Dia inteiro": "Todo el día",
+    "hoje, amanhã, 25/12…": "hoy, mañana, 25/12…",
+    "Revisar": "Revisar",
+    "Voltar": "Volver",
+    "Criar evento": "Crear evento",
+    "Criar este evento na sua agenda principal do Google?": "¿Crear este evento en tu agenda principal de Google?",
+    "Criando…": "Creando…",
+    "Evento criado!": "¡Evento creado!",
+    "Data inválida. Use hoje, amanhã, 25/12 ou 25/12/2026.": "Fecha no válida. Usa hoy, mañana, 25/12 o 25/12/2026.",
+    "Hora inválida. Use 14:30.": "Hora no válida. Usa 14:30.",
+    "Informe um título (até 200 caracteres) e uma duração válida.": "Indica un título (hasta 200 caracteres) y una duración válida.",
+    "dia inteiro": "todo el día",
+    "Criação de eventos desligada ou sem permissão": "Creación de eventos desactivada o sin permiso",
+    "Falha ao criar o evento: {erro}": "Error al crear el evento: {erro}",
+    "sem permissão para criar eventos": "sin permiso para crear eventos",
     # sonidos
     "Mensagem": "Mensaje",
     "Concluído": "Completado",

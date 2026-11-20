@@ -213,6 +213,8 @@ class Island(NotchMixin, AutoHideMixin, PagesMixin, InputMixin, Gtk.Window):
         if key is None or (key or "").startswith("agenda_"):
             if key in ("agenda_enabled", "agenda_days"):
                 self.agenda.refresh()
+            if key == "agenda_write":
+                self.agenda.apply_write_setting()
             self.agenda.tick()
             self._on_agenda_change()
         if key is None or (key or "").startswith("water_"):

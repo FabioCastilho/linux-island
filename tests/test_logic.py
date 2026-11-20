@@ -684,5 +684,91 @@ class BluetoothParseTests(unittest.TestCase):
         self.assertEqual(sorted(pagelist.order("")), sorted(pagelist.ALL_PAGES))
 
 
+
+class AgendaCreateEventTests(unittest.TestCase):
+    TODAY = datetime(2026, 11, 20).date()
+
+    def test_parse_date_accepts_friendly_and_numeric_forms(self):
+        import agenda
+        d = self.TODAY
+        self.assertEqual(agenda.parse_date("", d), d)
+        self.assertEqual(agenda.parse_date("Amanhã", d), datetime(2026, 11, 21).date())
+        self.assertEqual(agenda.parse_date("25/12", d), datetime(2026, 12, 25).date())
+        self.assertEqual(agenda.parse_date("5/1/2027", d), datetime(2027, 1, 5).date())
+        self.assertEqual(agenda.parse_date("2027-01-05", d), datetime(2027, 1, 5).date())
+
+    def test_parse_date_rejects_garbage(self):
+        import agenda
+        for bad in ("31/02", "32/01/2026", "abc", "2026/01/01", "13-01"):
+            with self.assertRaises(ValueError, msg=bad):
+                agenda.parse_date(bad, self.TODAY)
+
+    def test_parse_time(self):
+        import agenda
+        self.assertEqual(agenda.parse_time("14:30").hour, 14)
+        self.assertEqual(agenda.parse_time("9h").hour, 9)
+        self.assertEqual(agenda.parse_time("07").minute, 0)
+        for bad in ("25:00", "12:60", "x", "", "12:3"):
+            with self.assertRaises(ValueError, msg=bad):
+                agenda.parse_time(bad)
+
+    def test_build_event_timed_has_only_the_essentials(self):
+        import agenda
+        from datetime import time
+        body = agenda.build_event("  Dentista ", self.TODAY, time(14, 0), 45)
+        self.assertEqual(set(body), {"summary", "start", "end"})  # sem convidados/local/lembretes
+        self.assertEqual(body["summary"], "Dentista")
+        start = datetime.fromisoformat(body["start"]["dateTime"])
+        end = datetime.fromisoformat(body["end"]["dateTime"])
+        self.assertIsNotNone(start.tzinfo)
+        self.assertEqual((end - start).total_seconds(), 45 * 60)
+
+    def test_build_event_all_day_ends_next_day(self):
+        import agenda
+        body = agenda.build_event("Feriado", self.TODAY)
+        self.assertEqual(body["start"], {"date": "2026-11-20"})
+        self.assertEqual(body["end"], {"date": "2026-11-21"})
+
+    def test_build_event_validates(self):
+        import agenda
+        from datetime import time
+        for title, dur in (("", 60), ("   ", 60), ("x" * 201, 60), ("ok", 4), ("ok", 24 * 60 + 1)):
+            with self.assertRaises(ValueError, msg=(title[:5], dur)):
+                agenda.build_event(title, self.TODAY, time(10, 0), dur)
+
+    def test_write_is_opt_in_by_default(self):
+        self.assertIs(config.SCHEMA["agenda_write"][0], False)
+
+
+class GoogleCalendarWriteTests(unittest.TestCase):
+    def _gc(self, token):
+        import google_calendar
+        gc = object.__new__(google_calendar.GoogleCalendar)  # sem chaveiro nem rede
+        gc.token = token
+        return gc
+
+    def test_can_write_depends_on_the_granted_scope(self):
+        import google_calendar as g
+        self.assertFalse(self._gc(None).can_write)
+        self.assertFalse(self._gc({"refresh_token": "r"}).can_write)  # token antigo, sem scope
+        self.assertFalse(self._gc({"refresh_token": "r", "scope": g.SCOPE_READ}).can_write)
+        self.assertTrue(self._gc({"refresh_token": "r",
+                                  "scope": f"{g.SCOPE_READ} {g.SCOPE_WRITE}"}).can_write)
+
+    def test_create_event_refuses_without_write_scope(self):
+        import google_calendar as g
+        gc = self._gc({"refresh_token": "r", "scope": g.SCOPE_READ})
+        with self.assertRaises(g.AuthError):
+            gc.create_event({"summary": "x"})
+
+    def test_client_can_only_create_never_edit_or_delete(self):
+        import google_calendar as g
+        public = {n for n in dir(g.GoogleCalendar) if not n.startswith("_")}
+        for forbidden in ("update_event", "delete_event", "patch_event", "edit_event",
+                          "remove_event", "move_event"):
+            self.assertNotIn(forbidden, public)
+        self.assertIn("create_event", public)
+
+
 if __name__ == "__main__":
     unittest.main()

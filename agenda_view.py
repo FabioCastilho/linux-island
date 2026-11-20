@@ -5,11 +5,12 @@ from gi.repository import Gio, Gtk
 
 from agenda import countdown, upcoming
 from i18n import _
+from icons import GLYPHS, Glyph
 from views import clip, icon, label
 
 MAX_ROWS = 7
-CAL_ICON = "x-office-calendar-symbolic"
-VIDEO_ICON = "camera-video-symbolic"
+CAL_ICON = "calendar"  # glifos próprios (icons.py): o tema do sistema pode não ter estes
+VIDEO_ICON = "video"
 
 
 def open_url(url):
@@ -21,7 +22,8 @@ def pill_button(text, icon_name, cb, cls="water-main"):
     btn = Gtk.Button()
     box = Gtk.Box(spacing=6)
     if icon_name:
-        box.pack_start(icon(icon_name, 14), False, False, 0)
+        box.pack_start(Glyph(icon_name, 14) if icon_name in GLYPHS else icon(icon_name, 14),
+                       False, False, 0)
     lb = Gtk.Label(label=text)
     box.pack_start(lb, False, False, 0)
     btn.add(box)
@@ -36,10 +38,10 @@ class MeetingPill(Gtk.Box):
 
     def __init__(self):
         super().__init__(spacing=8)
-        self.pack_start(icon(CAL_ICON, 14), False, False, 0)
+        self.pack_start(Glyph(CAL_ICON, 14), False, False, 0)
         self.title = label("clock")
         self.when = label("dim")
-        self.video = icon(VIDEO_ICON, 14)
+        self.video = Glyph(VIDEO_ICON, 14)
         for w in (self.title, self.when, self.video):
             self.pack_start(w, False, False, 0)
 
@@ -61,19 +63,30 @@ class AgendaPage(Gtk.Box):
             getattr(self, f"set_margin_{side}")(18 if side in ("start", "end") else 14)
 
         head = Gtk.Box(spacing=8)
-        head.pack_start(icon(CAL_ICON, 16), False, False, 0)
+        head.pack_start(Glyph(CAL_ICON, 16), False, False, 0)
         title = label("title")
         title.set_text(_("Agenda"))
         head.pack_start(title, False, False, 0)
         self.status = label("dim small", 1.0)
         head.pack_end(self.status, True, True, 0)
+        self.new_btn = pill_button(_("Novo evento"), "plus", self._new_event,
+                                   "water-snooze")
+        self.new_btn.show_all()  # antes do no_show_all, senão o conteúdo do botão fica escondido
+        self.new_btn.set_no_show_all(True)  # só aparece com a criação de eventos liberada
+        head.pack_end(self.new_btn, False, False, 0)
         self.pack_start(head, False, False, 0)
 
         self.body = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
         self.pack_start(self.body, False, False, 0)
 
+    def _new_event(self):
+        from event_dialog import EventDialog
+        if self.agenda.can_create:
+            EventDialog(self.agenda)
+
     # --- conteúdo ---------------------------------------------------------
     def update(self, cfg):
+        self.new_btn.set_visible(self.agenda.can_create)
         for c in self.body.get_children():
             self.body.remove(c)
         now = datetime.now().astimezone()
@@ -161,7 +174,7 @@ class AgendaPage(Gtk.Box):
             c.set_text(countdown(now, ev))
             row.pack_start(c, False, False, 0)
         if ev["meet"]:
-            row.pack_start(icon(VIDEO_ICON, 13), False, False, 0)
+            row.pack_start(Glyph(VIDEO_ICON, 13), False, False, 0)
         btn.add(row)
         btn.connect("clicked", lambda *_a: open_url(ev["meet"] or ev["html"]))
         return btn

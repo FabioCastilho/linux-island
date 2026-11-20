@@ -1,4 +1,8 @@
-"""Google Calendar (somente leitura): login OAuth de app de desktop e leitura de eventos.
+"""Google Calendar: login OAuth de app de desktop, leitura de eventos e (opcional) criação.
+
+- Por padrão o app pede só leitura (calendar.readonly). A criação de eventos é opt-in: com
+  "Permitir criar eventos" ligado o login pede calendar.events, e este módulo só sabe
+  CRIAR (create_event); não há código para editar nem apagar.
 
 - Credenciais do app: google_client.json empacotado com o projeto (o app
   oficial do linux-island) ou ~/.config/linux-island/google_client_secret.json
@@ -24,7 +28,8 @@ from gi.repository import Gio, GLib
 from i18n import _
 from secret_store import SecretStore
 
-SCOPE = "https://www.googleapis.com/auth/calendar.readonly"
+SCOPE_READ = "https://www.googleapis.com/auth/calendar.readonly"
+SCOPE_WRITE = "https://www.googleapis.com/auth/calendar.events"
 AUTH_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 TOKEN_URL = "https://oauth2.googleapis.com/token"
 REVOKE_URL = "https://oauth2.googleapis.com/revoke"
@@ -96,6 +101,11 @@ class GoogleCalendar:
     def connected(self):
         return bool(self.token and self.token.get("refresh_token"))
 
+    @property
+    def can_write(self):
+        """O token guardado tem a permissão de criar eventos (foi concedida no login)."""
+        return SCOPE_WRITE in ((self.token or {}).get("scope") or "").split()
+
     # tokens
     def _token_request(self, fields):
         body = urllib.parse.urlencode(fields).encode()
@@ -116,6 +126,7 @@ class GoogleCalendar:
             "access_token": data["access_token"],
             "expires_at": time.time() + int(data.get("expires_in", 3600)) - 60,
             "refresh_token": data.get("refresh_token") or (self.token or {}).get("refresh_token"),
+            "scope": data.get("scope") or (self.token or {}).get("scope", ""),
         }
         self.store.save(tok)
         self.token = tok
@@ -141,8 +152,10 @@ class GoogleCalendar:
             return self.token["access_token"]
 
     # login
-    def login(self):
-        """Abre o navegador e espera o retorno. Devolve None ou levanta AuthError."""
+    def login(self, write=False):
+        """Abre o navegador e espera o retorno. Devolve None ou levanta AuthError.
+
+        write=True pede também a permissão de criar eventos."""
         cs = find_client_secret()
         if not cs:
             raise MissingAppError(_("credenciais do app não encontradas"))
@@ -157,7 +170,8 @@ class GoogleCalendar:
         redirect = f"http://127.0.0.1:{server.server_address[1]}"
         url = AUTH_URL + "?" + urllib.parse.urlencode({
             "client_id": cid, "redirect_uri": redirect, "response_type": "code",
-            "scope": SCOPE, "code_challenge": challenge, "code_challenge_method": "S256",
+            "scope": SCOPE_WRITE if write else SCOPE_READ,
+            "code_challenge": challenge, "code_challenge_method": "S256",
             "state": state, "access_type": "offline", "prompt": "consent",
         })
         GLib.idle_add(lambda: Gio.AppInfo.launch_default_for_uri(url, None) and False)
@@ -206,6 +220,26 @@ class GoogleCalendar:
             if e.code == 401 and retry:
                 self._access_token(force=True)
                 return self.fetch_events(time_min, time_max, retry=False)
+            raise
+
+    # criação (única escrita que o app faz)
+    def create_event(self, body, retry=True):
+        """Cria um evento na agenda principal. `body` vem de agenda.build_event."""
+        if not self.can_write:
+            raise AuthError(_("sem permissão para criar eventos"))
+        req = urllib.request.Request(
+            EVENTS_URL + "?sendUpdates=none", data=json.dumps(body).encode(), method="POST",
+            headers={"Authorization": f"Bearer {self._access_token()}",
+                     "Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=15) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and retry:
+                self._access_token(force=True)
+                return self.create_event(body, retry=False)
+            if e.code == 403:
+                raise AuthError(_("sem permissão para criar eventos")) from e
             raise
 
 
