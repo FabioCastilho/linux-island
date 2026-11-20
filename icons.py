@@ -309,6 +309,95 @@ def _moon(cr):
     cr.stroke()
 
 
+def _calendar(cr):
+    x0, y0, x1, y1, r = 0.16, 0.24, 0.84, 0.82, 0.10
+    cr.new_sub_path()
+    cr.arc(x1 - r, y0 + r, r, -math.pi / 2, 0)
+    cr.arc(x1 - r, y1 - r, r, 0, math.pi / 2)
+    cr.arc(x0 + r, y1 - r, r, math.pi / 2, math.pi)
+    cr.arc(x0 + r, y0 + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+    cr.stroke()
+    cr.move_to(x0, 0.43)  # faixa do topo
+    cr.line_to(x1, 0.43)
+    cr.stroke()
+    for x in (0.33, 0.67):  # argolas
+        cr.move_to(x, 0.14)
+        cr.line_to(x, 0.32)
+        cr.stroke()
+
+
+def _video(cr):
+    x0, y0, x1, y1, r = 0.12, 0.30, 0.62, 0.70, 0.08
+    cr.new_sub_path()
+    cr.arc(x1 - r, y0 + r, r, -math.pi / 2, 0)
+    cr.arc(x1 - r, y1 - r, r, 0, math.pi / 2)
+    cr.arc(x0 + r, y1 - r, r, math.pi / 2, math.pi)
+    cr.arc(x0 + r, y0 + r, r, math.pi, 3 * math.pi / 2)
+    cr.close_path()
+    cr.stroke()
+    cr.move_to(0.62, 0.45)  # lente
+    cr.line_to(0.88, 0.30)
+    cr.line_to(0.88, 0.70)
+    cr.line_to(0.62, 0.55)
+    cr.stroke()
+
+
+def _home(cr):
+    cr.move_to(0.16, 0.48)
+    cr.line_to(0.5, 0.18)
+    cr.line_to(0.84, 0.48)
+    cr.stroke()
+    cr.move_to(0.24, 0.42)
+    cr.line_to(0.24, 0.80)
+    cr.line_to(0.76, 0.80)
+    cr.line_to(0.76, 0.42)
+    cr.stroke()
+    cr.move_to(0.43, 0.80)
+    cr.line_to(0.43, 0.58)
+    cr.line_to(0.57, 0.58)
+    cr.line_to(0.57, 0.80)
+    cr.stroke()
+
+
+def _drop(cr):
+    cr.move_to(0.5, 0.14)
+    cr.curve_to(0.5, 0.14, 0.78, 0.44, 0.78, 0.62)
+    cr.curve_to(0.78, 0.78, 0.65, 0.88, 0.5, 0.88)
+    cr.curve_to(0.35, 0.88, 0.22, 0.78, 0.22, 0.62)
+    cr.curve_to(0.22, 0.44, 0.5, 0.14, 0.5, 0.14)
+    cr.close_path()
+    cr.stroke()
+
+
+def _chip(cr):
+    cr.rectangle(0.28, 0.28, 0.44, 0.44)
+    cr.stroke()
+    for t in (0.40, 0.60):  # pinos nos quatro lados
+        for a, b in (((t, 0.14), (t, 0.28)), ((t, 0.72), (t, 0.86)),
+                     ((0.14, t), (0.28, t)), ((0.72, t), (0.86, t))):
+            cr.move_to(*a)
+            cr.line_to(*b)
+            cr.stroke()
+
+
+def _layers(cr):
+    cr.move_to(0.5, 0.16)
+    cr.line_to(0.86, 0.36)
+    cr.line_to(0.5, 0.56)
+    cr.line_to(0.14, 0.36)
+    cr.close_path()
+    cr.stroke()
+    cr.move_to(0.14, 0.54)
+    cr.line_to(0.5, 0.74)
+    cr.line_to(0.86, 0.54)
+    cr.stroke()
+    cr.move_to(0.14, 0.70)
+    cr.line_to(0.5, 0.90)
+    cr.line_to(0.86, 0.70)
+    cr.stroke()
+
+
 GLYPHS = {
     "bell": _bell, "timer": _timer, "tasks": _tasks, "sun": _sun, "speaker": _speaker,
     "muted": _muted, "wifi": _wifi, "ethernet": _ethernet, "vpn": _vpn, "battery": _battery,
@@ -316,6 +405,8 @@ GLYPHS = {
     "reset": _reset, "skip": _skip, "down": _arrow_down, "up": _arrow_up, "moon": _moon,
     "win_min": _win_min, "win_max": _win_max, "win_restore": _win_restore,
     "win_close": _win_close, "bluetooth": _bluetooth, "mic": _mic, "camera": _camera, "terminal": _terminal, "left": _chevron_left, "right": _chevron_right,
+    "calendar": _calendar, "video": _video,
+    "home": _home, "drop": _drop, "chip": _chip, "layers": _layers,
 }
 
 
