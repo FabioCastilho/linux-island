@@ -41,6 +41,7 @@ SCHEMA = {
     "glass_style": (False, _is_bool),         # vidro: brilho no topo e aro de luz
     "claude_alert": (True, _is_bool),         # avisa na pílula quando o Claude Code termina
     "keep_awake": (False, _is_bool),          # não deixar o PC suspender (lembra ao reiniciar)
+    "glass_sheen": (True, _is_bool),          # brilho no topo e aro forte (desligado: vidro liso, como o dock)
     "glass_blur": (True, _is_bool),           # desfoque do fundo (KDE), com o vidro ligado
     "notch_style": (False, _is_bool),         # colada no topo, quinas côncavas (entalhe)
     # relógio

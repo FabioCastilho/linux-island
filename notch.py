@@ -140,7 +140,14 @@ class NotchMixin:
         a = self._path(cr)
         cr.set_source_rgba(c.red, c.green, c.blue, c.alpha)
         cr.fill_preserve() if self.cfg["glass_style"] else cr.fill()
-        if self.cfg["glass_style"]:
+        if self.cfg["glass_style"] and not self.cfg["glass_sheen"]:
+            # vidro liso (como o dock): só um aro fino e uniforme, sem brilho no topo
+            cr.new_path()                 # descarta o caminho preservado do preenchimento
+            self._path(cr, outline=True)
+            cr.set_source_rgba(1, 1, 1, 0.22)
+            cr.set_line_width(1.0)
+            cr.stroke()
+        elif self.cfg["glass_style"]:
             # brilho especular: luz entrando pelo topo, sumindo antes da metade
             cr.save()
             cr.clip()

@@ -150,6 +150,7 @@ ES = {
     "Clássico": "Clásico",
     "Vidro": "Vidrio",
     "Claro": "Claro",
+    "Escuro": "Oscuro",
     "Grafite": "Grafito",
     "Cores": "Colores",
     "Fundo": "Fondo",

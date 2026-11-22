@@ -148,6 +148,7 @@ EN = {
     "Clássico": "Classic",
     "Vidro": "Glass",
     "Claro": "Light",
+    "Escuro": "Dark",
     "Grafite": "Graphite",
     "Cores": "Colors",
     "Fundo": "Background",

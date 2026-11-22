@@ -25,7 +25,7 @@ MAX_FILE_BYTES = 64 * 1024   # um tema é pequeno; recusa arquivos enormes
 # chaves que um tema pode carregar (o resto da configuração é do usuário, não do tema)
 THEME_KEYS = (
     "bg_color", "text_color", "accent_auto", "accent_color", "border", "radius_expanded",
-    "radius_compact", "glass_style", "glass_blur", "notch_style", "notch_ear", "eq_style",
+    "radius_compact", "glass_style", "glass_sheen", "glass_blur", "notch_style", "notch_ear", "eq_style",
     "art_glow", "animations", "color_water", "color_meeting", "color_focus", "color_claude",
 )
 
@@ -48,6 +48,9 @@ BUILTIN = [
     _t("Grafite", "rgba(43,46,52,1)", "rgb(230,232,236)", False, "rgb(255,159,67)"),
     _t("Vidro Apple", "rgba(30,32,44,0.50)", "rgb(255,255,255)", True, "rgb(10,132,255)",
        glass=True),
+    # o "Escuro" do mac-dock: cinza neutro translúcido sobre o blur do KWin
+    _t("Escuro", "rgba(26,26,31,0.55)", "rgb(255,255,255)", True, "rgb(10,132,255)",
+       glass=True, glass_blur=True, glass_sheen=False),
     # novos: levam também as cores de alerta, o equalizador e a capa
     _t("Claude", "rgba(31,27,24,1)", "rgb(245,237,229)", False, "rgb(217,119,87)",
        eq_style="mirror", art_glow="glow", color_water="rgb(96,165,250)",
