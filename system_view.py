@@ -197,7 +197,7 @@ class Ring(Tweened, Gtk.DrawingArea):
 
 
 class SystemPage(Gtk.Box):
-    WIDTH = 420
+    WIDTH = 560  # duas colunas: métricas à esquerda, controles à direita
 
     def __init__(self, cfg, on_awake=lambda on: None):
         super().__init__(orientation=Gtk.Orientation.VERTICAL, spacing=12)
@@ -230,9 +230,20 @@ class SystemPage(Gtk.Box):
         self.hist = History()
         right.pack_start(self.hist, False, False, 0)
         self.info = label("dim small")
+        self.info.set_line_wrap(True)       # coluna estreita: quebra em vez de alargar a ilha
+        self.info.set_max_width_chars(22)
         right.pack_start(self.info, False, False, 0)
         body.pack_start(right, True, True, 0)
-        self.pack_start(body, False, False, 0)
+        net_col, controls = self._build_extras()
+        cols = Gtk.Box(spacing=18, homogeneous=True)
+        left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        left.pack_start(body, False, False, 0)
+        left.pack_start(net_col, False, False, 0)
+        right_col = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+        right_col.pack_start(controls, False, False, 0)
+        cols.pack_start(left, True, True, 0)
+        cols.pack_start(right_col, True, True, 0)
+        self.pack_start(cols, False, False, 0)
 
         awake = Gtk.Box(spacing=8)
         awake_lbl = label("small")
@@ -243,8 +254,7 @@ class SystemPage(Gtk.Box):
         self.awake_sw.set_valign(Gtk.Align.CENTER)
         self.awake_sw.connect("state-set", self._on_awake)
         awake.pack_end(self.awake_sw, False, False, 0)
-        self.pack_start(awake, False, False, 0)
-        self.pack_start(self._build_extras(), False, False, 0)
+        right_col.pack_start(awake, False, False, 0)
 
         row = Gtk.Box(spacing=6, homogeneous=True)
         self.buttons = {}
@@ -280,7 +290,7 @@ class SystemPage(Gtk.Box):
         self._sink_names, self._sink_default = [], ""
         self._net = sysinfo.NetRate()
         self._n = 0
-        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)
+        box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=8)  # controles (coluna direita)
 
         # som
         vol = Gtk.Box(spacing=8)
@@ -294,7 +304,7 @@ class SystemPage(Gtk.Box):
         vol.pack_start(self.vol_pct, False, False, 0)
         out = Gtk.Box(spacing=8)
         out.set_margin_start(36)
-        self.out_label = label("dim small", 0.0)
+        self.out_label = label("dim small", 0.0, True)
         self.out_btn = Gtk.Button(label=_("Trocar saída"))
         self.out_btn.set_can_focus(False)
         self.out_btn.get_style_context().add_class("chip")
@@ -324,16 +334,15 @@ class SystemPage(Gtk.Box):
         self.net_glyph = Glyph("ethernet", 16)
         self.net_glyph.set_margin_start(6)
         self.net_glyph.set_margin_end(6)
-        self.net_name = label("small", 0.0)
+        self.net_name = label("small", 0.0, True)
         self.vpn_badge = label("badge")
         self.vpn_badge.set_text("VPN")
         self.vpn_badge.set_no_show_all(True)
         self.net_rate = label("time", 1.0)
         self.net_box.pack_start(self.net_glyph, False, False, 0)
-        self.net_box.pack_start(self.net_name, False, False, 0)
+        self.net_box.pack_start(self.net_name, True, True, 0)
         self.net_box.pack_start(self.vpn_badge, False, False, 0)
         self.net_box.pack_end(self.net_rate, False, False, 0)
-        box.pack_start(self.net_box, False, False, 0)
 
         # bateria (notebook)
         self.bat_box = Gtk.Box(spacing=8)
@@ -345,12 +354,13 @@ class SystemPage(Gtk.Box):
         self.bat_box.pack_start(self.bat_label, True, True, 0)
         box.pack_start(self.bat_box, False, False, 0)
         box.show_all()
+        self.net_box.show_all()
         # começam escondidos e só aparecem quando a leitura confirma que existem. Os filhos
         # são mostrados antes: show_all() não entra em widgets com no_show_all.
         for w in (self.sound_box, self.bright_box, self.bat_box):
             w.set_no_show_all(True)
             w.hide()
-        return box
+        return self.net_box, box
 
     def set_fg(self, fg):
         self.ring.fg = self.hist.fg = fg
