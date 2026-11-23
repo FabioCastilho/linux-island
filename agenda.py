@@ -120,6 +120,35 @@ def upcoming(now, events, days):
     return [(day_label(d, today), groups[d]) for d in sorted(groups)]
 
 
+def events_by_day(events):
+    """{dia: [eventos]} para o calendário em grade. Evento de dia inteiro cobre todos os dias
+    dele (o fim da API é exclusivo); evento com hora vai no dia em que começa."""
+    days = {}
+    for ev in events:
+        first = ev["start"].date()
+        if ev["all_day"]:
+            last = max(first, ev["end"].date() - timedelta(days=1))
+        else:
+            last = first
+        d = first
+        while d <= last and (d - first).days < 31:
+            days.setdefault(d, []).append(ev)
+            d += timedelta(days=1)
+    return days
+
+
+def month_weeks(first):
+    """Semanas (domingo a sábado) que cobrem o mês de `first`, com os dias vizinhos."""
+    import calendar
+    return calendar.Calendar(firstweekday=6).monthdatescalendar(first.year, first.month)
+
+
+def shift_month(first, step):
+    """Primeiro dia do mês `step` meses depois (ou antes) de `first`."""
+    i = first.year * 12 + first.month - 1 + step
+    return date(i // 12, i % 12 + 1, 1)
+
+
 # --- criação de evento (lógica pura) -------------------------------------------
 MAX_TITLE = 200
 MIN_DURATION, MAX_DURATION = 5, 24 * 60
@@ -279,8 +308,10 @@ class Agenda:
             return
         self._busy = True
         now = datetime.now().astimezone()
-        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-        end = start + timedelta(days=self.cfg["agenda_days"])
+        # janela do calendário em grade: mês passado, atual e próximo (cobre o alerta e o pill)
+        first = shift_month(now.date().replace(day=1), -1)
+        start = datetime.combine(first, dtime(0, 0)).astimezone()
+        end = datetime.combine(shift_month(first, 3), dtime(0, 0)).astimezone()
 
         def work():
             items, err = None, None

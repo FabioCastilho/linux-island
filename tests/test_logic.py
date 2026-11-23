@@ -30,6 +30,26 @@ class FakeNotification:
         self.app, self.summary, self.body = app, summary, body
 
 
+class AgendaMonthTests(unittest.TestCase):
+    def test_all_day_event_covers_each_day_end_exclusive(self):
+        import agenda
+        from datetime import date
+        tz = datetime(2026, 11, 1).astimezone().tzinfo
+        ev = {"start": datetime(2026, 11, 10, tzinfo=tz), "end": datetime(2026, 11, 12, tzinfo=tz),
+              "all_day": True, "title": "x"}
+        days = agenda.events_by_day([ev])
+        self.assertEqual(sorted(days), [date(2026, 11, 10), date(2026, 11, 11)])
+
+    def test_month_grid_is_full_weeks_sunday_first(self):
+        import agenda
+        from datetime import date
+        weeks = agenda.month_weeks(date(2026, 11, 1))
+        self.assertTrue(all(len(w) == 7 for w in weeks))
+        self.assertEqual(weeks[0][0].weekday(), 6)
+        self.assertEqual(agenda.shift_month(date(2026, 12, 1), 1), date(2027, 1, 1))
+        self.assertEqual(agenda.shift_month(date(2026, 1, 1), -1), date(2025, 12, 1))
+
+
 class ConfigTests(unittest.TestCase):
     def test_every_default_passes_its_own_validator(self):
         for key, (default, valid) in config.SCHEMA.items():
