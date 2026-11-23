@@ -55,11 +55,9 @@ from notifications import NotificationWatcher  # noqa: E402
 from views import Compact, Expanded, NotifPill, label  # noqa: E402
 from water import Notifier, Water, play_sound  # noqa: E402
 from water_view import DropIcon, WaterPage  # noqa: E402
-from claude_view import ClaudePage  # noqa: E402
+from claude_hub import ClaudeHub  # noqa: E402
 from claude_sessions import read_sessions  # noqa: E402
 from notifications import Notification  # noqa: E402
-from sessions_view import SessionsPage  # noqa: E402
-from ia_view import IAPage  # noqa: E402
 from system_view import CpuSampler, SystemPage  # noqa: E402
 import brands  # noqa: E402
 from agenda import Agenda  # noqa: E402
@@ -330,9 +328,8 @@ class Island(NotchMixin, AutoHideMixin, PagesMixin, InputMixin, Gtk.Window):
         self.water_page = WaterPage(self.water)
         self.agenda_page = AgendaPage(self.agenda, lambda: self.app.open_settings("agenda"))
         self.system_page = SystemPage(self.cfg, lambda on: self.compact.set_awake(on))
-        self.claude_page = ClaudePage(self.cfg)
-        self.sessions_page = SessionsPage()
-        self.ia_page = IAPage()
+        self.claude_hub = ClaudeHub(self.cfg)  # sessões, agentes e uso numa página só
+        self.claude_page = self.claude_hub.usage
         self.notifs_page = NotifsPage(self.notif_history)
         self.focus_page = FocusPage(self.focus)
         self.tasks_page = TasksPage(self.tasks, self._on_editing)

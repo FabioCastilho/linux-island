@@ -3,8 +3,9 @@
 Função pura (sem GTK) para a ordem e a visibilidade poderem ser testadas e usadas pela
 configuração e pela janela.
 """
-ALL_PAGES = ("home", "water", "agenda", "notifs", "focus", "tasks", "camera", "bluetooth",
-             "system", "claude", "ia", "sessions")
+ALL_PAGES = ("home", "media", "water", "agenda", "notifs", "focus", "tasks", "camera", "bluetooth",
+             "system", "claude")
+LEGACY = ("ia", "sessions")  # páginas que viraram "claude"; ainda valem em configs antigas
 ALWAYS_SHOWN = ("home",)  # sem a página inicial a ilha não teria o que mostrar ao expandir
 
 
@@ -17,7 +18,7 @@ def valid_spec(spec):
     if not isinstance(spec, str) or len(spec) > 200:
         return False
     names = split(spec)
-    return all(n in ALL_PAGES for n in names) and len(names) == len(set(names))
+    return all(n in ALL_PAGES or n in LEGACY for n in names) and len(names) == len(set(names))
 
 
 def order(spec):

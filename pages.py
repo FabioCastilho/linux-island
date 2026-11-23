@@ -18,13 +18,13 @@ from water import play_sound
 
 TRANSITION_MS = 320            # duração-base; o valor real passa por anim.ms()
 PAGES = pagelist.ALL_PAGES     # todas as páginas existentes (as visíveis vêm de _page_names)
-PAGE_TITLES = {"home": "Início", "water": "Água", "agenda": "Agenda", "notifs": "Notificações",
+PAGE_TITLES = {"home": "Início", "media": "Mídia", "water": "Água", "agenda": "Agenda", "notifs": "Notificações",
                "focus": "Foco", "tasks": "Tarefas", "camera": "Câmera", "bluetooth": "Bluetooth",
-               "system": "Sistema", "claude": "Claude Code", "ia": "IA", "sessions": "Sessões"}
+               "system": "Sistema", "claude": "Claude Code"}
 # ícone de cada página na faixa de baixo (glifos próprios de icons.py)
-PAGE_GLYPHS = {"home": "home", "water": "drop", "agenda": "calendar", "notifs": "bell",
+PAGE_GLYPHS = {"home": "home", "media": "music", "water": "drop", "agenda": "calendar", "notifs": "bell",
                "focus": "timer", "tasks": "tasks", "camera": "camera", "bluetooth": "bluetooth",
-               "system": "chip", "claude": "terminal", "ia": "bot", "sessions": "layers"}
+               "system": "chip", "claude": "bot"}
 
 
 class PagesMixin:
@@ -36,14 +36,17 @@ class PagesMixin:
         self.pages.set_interpolate_size(True)
         self.pages.set_transition_type(Gtk.StackTransitionType.SLIDE_LEFT_RIGHT)
         anim.register(self.pages, TRANSITION_MS)
-        for name, widget in (("home", self.full), ("water", self.water_page),
+        for name, widget in (("home", self.full), ("media", self.full.media_page),
+                             ("water", self.water_page),
                              ("agenda", self.agenda_page), ("notifs", self.notifs_page),
                              ("focus", self.focus_page), ("tasks", self.tasks_page),
                              ("camera", self.camera_page), ("bluetooth", self.bluetooth_page),
-                             ("system", self.system_page), ("claude", self.claude_page),
-                             ("ia", self.ia_page), ("sessions", self.sessions_page)):
+                             ("system", self.system_page), ("claude", self.claude_hub)):
             self.pages.add_named(widget, name)
-        box.pack_start(self.pages, False, False, 0)
+        # o Stack mostra o primeiro filho que já estiver visível ao ser adicionado (uma página que
+        # chama show() sozinha, como o Foco, vencia a inicial): fixa o Início de propósito
+        self.full.show()  # set_visible_child ignora filho invisível (e o show_all da janela vem depois)
+        self.pages.set_visible_child_name("home")
 
         self.dots_box = Gtk.Box(spacing=0)
         self.dots_box.set_halign(Gtk.Align.CENTER)
@@ -67,8 +70,8 @@ class PagesMixin:
         foot = Gtk.Box(spacing=6)
         foot.set_margin_start(10)
         foot.set_margin_end(10)
-        foot.set_margin_top(2)
-        foot.set_margin_bottom(6)
+        foot.set_margin_top(8)
+        foot.set_margin_bottom(0)
         self.prev_btn, _g = glyph_button("left", 14, lambda: self.turn_page(-1),
                                          _("Página anterior"))
         self.next_btn, _g = glyph_button("right", 14, lambda: self.turn_page(1),
@@ -82,7 +85,8 @@ class PagesMixin:
         for sig in ("button-press-event", "button-release-event"):
             catcher.connect(sig, lambda *_a: True)
         self.foot = catcher
-        box.pack_start(catcher, False, False, 0)
+        box.pack_start(catcher, False, False, 0)  # faixa de páginas no topo: não se mexe quando a página muda de altura
+        box.pack_start(self.pages, False, False, 0)
         self._apply_pages()
         self._mark_dot("home")
         return box

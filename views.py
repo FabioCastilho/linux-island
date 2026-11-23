@@ -279,7 +279,17 @@ class Expanded(Gtk.Box):
         self.days_rev = revealer(self.days_box, Gtk.RevealerTransitionType.SLIDE_DOWN)
         self.pack_start(self.days_rev, False, False, 0)
         self.music_rev = revealer(self._build_music(), Gtk.RevealerTransitionType.SLIDE_DOWN)
-        self.pack_start(self.music_rev, False, False, 0)
+        # a mídia mora numa página própria (aba "Mídia"); os widgets continuam sendo desta classe
+        self.media_page = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.media_page.set_size_request(self.WIDTH, -1)
+        for side in ("top", "bottom", "start", "end"):
+            getattr(self.media_page, f"set_margin_{side}")(18 if side in ("start", "end") else 14)
+        self.nothing = label("dim", 0.5)
+        self.nothing.set_text(_("Nada tocando"))
+        self.nothing.set_margin_top(28)
+        self.nothing.set_margin_bottom(28)
+        self.media_page.pack_start(self.nothing, False, False, 0)
+        self.media_page.pack_start(self.music_rev, False, False, 0)
 
     # --- relógio + clima atual -----------------------------------------
     def _build_header(self):
@@ -485,6 +495,7 @@ class Expanded(Gtk.Box):
             self.artist.set_text(track.artist)
             self.t_len.set_text(fmt_time(track.length))
         self.music_rev.set_reveal_child(track is not None)
+        self.nothing.set_visible(track is None)
 
     def set_playing(self, playing):
         self.eq.set_playing(playing)

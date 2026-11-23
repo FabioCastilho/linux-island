@@ -327,6 +327,18 @@ def _calendar(cr):
         cr.stroke()
 
 
+def _music(cr):
+    cr.arc(0.34, 0.72, 0.12, 0, 2 * math.pi)  # cabeça da nota
+    cr.stroke()
+    cr.arc(0.70, 0.64, 0.12, 0, 2 * math.pi)
+    cr.stroke()
+    cr.move_to(0.46, 0.72)  # hastes ligadas por uma barra
+    cr.line_to(0.46, 0.26)
+    cr.line_to(0.82, 0.18)
+    cr.line_to(0.82, 0.64)
+    cr.stroke()
+
+
 def _video(cr):
     x0, y0, x1, y1, r = 0.12, 0.30, 0.62, 0.70, 0.08
     cr.new_sub_path()
@@ -430,7 +442,7 @@ GLYPHS = {
     "reset": _reset, "skip": _skip, "down": _arrow_down, "up": _arrow_up, "moon": _moon,
     "win_min": _win_min, "win_max": _win_max, "win_restore": _win_restore,
     "win_close": _win_close, "bluetooth": _bluetooth, "mic": _mic, "camera": _camera, "terminal": _terminal, "left": _chevron_left, "right": _chevron_right,
-    "calendar": _calendar, "video": _video,
+    "calendar": _calendar, "video": _video, "music": _music,
     "home": _home, "drop": _drop, "chip": _chip, "layers": _layers, "bot": _bot,
 }
 
