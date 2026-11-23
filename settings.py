@@ -419,6 +419,7 @@ class Settings(SettingsThemesMixin, SettingsPagesMixin, Gtk.Window):
         self._row(hover, "Expandir ao passar o mouse", self._switch("hover_expand"),
                   "Desligado: só abre com clique")
         self._row(hover, "Atraso do hover (ms)", self._spin("hover_delay_ms", 0, 2000, 20))
+        self._row(hover, "Atraso para recolher (ms)", self._spin("collapse_delay_ms", 0, 5000, 100))
         self._row(hover, "Mostrar a música nova na pílula", self._switch("peek_on_track"),
                   "Na troca de faixa a pílula se estica com título e artista por 4 s")
         self._row(hover, "Volume pela rolagem do mouse", self._switch("scroll_volume"),

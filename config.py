@@ -95,6 +95,7 @@ SCHEMA = {
     "peek_on_track": (True, _is_bool),
     "scroll_volume": (True, _is_bool),
     "hover_delay_ms": (120, _int_range(0, 2000)),
+    "collapse_delay_ms": (700, _int_range(0, 5000)),
     "margin_top": (2, _int_range(0, 200)),
     "auto_hide": (False, _is_bool),            # sobe para fora da tela e desce quando precisa
     "auto_hide_delay_s": (4, _int_range(1, 60)),

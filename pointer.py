@@ -14,7 +14,6 @@ DEBUG = bool(os.environ.get("ISLAND_DEBUG"))
 CLICK_SLOP_PX = 8        # até isso de movimento, ainda é clique
 SWIPE_PX = 50            # a partir disso, arrastar para o lado troca de página
 HSCROLL_STEP = 3.0       # deltas horizontais do touchpad para trocar de página
-COLLAPSE_DELAY_MS = 700  # tolera leaves espúrios do compositor
 VOLUME_STEP = 0.05       # 5% por "clique" da roda do mouse
 LIST_PAGES = ("notifs", "tasks")  # páginas com lista rolável
 
@@ -79,7 +78,7 @@ class InputMixin:
         else:
             self._cancel("expand")
             if self.expanded:
-                self._later("collapse", COLLAPSE_DELAY_MS,
+                self._later("collapse", self.cfg["collapse_delay_ms"],
                             lambda: (self._pointer_inside() or self._editing
                                      or self.set_expanded(False)))
 
