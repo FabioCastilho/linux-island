@@ -32,7 +32,13 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 <img src="docs/screenshots/focus_dark.png" width="32%"> <img src="docs/screenshots/tasks_dark.png" width="32%"> <img src="docs/screenshots/notifs_dark.png" width="32%">
 </p>
 <p>
-<img src="docs/screenshots/player_blur_dark.png" width="32%"> <img src="docs/screenshots/claude_chart.png" width="32%"> <img src="docs/screenshots/camera_page.png" width="32%">
+<img src="docs/screenshots/player_blur_dark.png" width="48%"> <img src="docs/screenshots/camera_page.png" width="48%">
+</p>
+<p>
+<img src="docs/screenshots/media_page.png" width="48%"> <img src="docs/screenshots/agenda_month.png" width="48%">
+</p>
+<p>
+<img src="docs/screenshots/system_page.png" width="48%"> <img src="docs/screenshots/claude_hub.png" width="48%">
 </p>
 
 **Music cover:** browsers send random cover art, so when what's playing comes from a known service the island shows its logo: YouTube, WhatsApp, Twitch, Netflix and Telegram always; YouTube Music, Deezer and Apple Music show the album cover and fall back to the logo only if the player sends none. Spotify and local players keep their own cover.

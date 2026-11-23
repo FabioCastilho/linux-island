@@ -32,7 +32,13 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 <img src="docs/screenshots/focus_dark.png" width="32%"> <img src="docs/screenshots/tasks_dark.png" width="32%"> <img src="docs/screenshots/notifs_dark.png" width="32%">
 </p>
 <p>
-<img src="docs/screenshots/player_blur_dark.png" width="32%"> <img src="docs/screenshots/claude_chart.png" width="32%"> <img src="docs/screenshots/camera_page.png" width="32%">
+<img src="docs/screenshots/player_blur_dark.png" width="48%"> <img src="docs/screenshots/camera_page.png" width="48%">
+</p>
+<p>
+<img src="docs/screenshots/media_page.png" width="48%"> <img src="docs/screenshots/agenda_month.png" width="48%">
+</p>
+<p>
+<img src="docs/screenshots/system_page.png" width="48%"> <img src="docs/screenshots/claude_hub.png" width="48%">
 </p>
 
 **Capa da música:** navegadores mandam capas aleatórias, então, quando o que toca vem de um serviço conhecido, a ilha mostra a logo dele: YouTube, WhatsApp, Twitch, Netflix e Telegram sempre; YouTube Music, Deezer e Apple Music mostram a capa do álbum e usam a logo só se o player não mandar capa. Álbuns do Spotify e de players locais seguem com a própria capa.
