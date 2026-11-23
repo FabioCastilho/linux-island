@@ -16,18 +16,17 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 
 | Página | Para que serve |
 |---|---|
-| **Início** | Relógio, previsão do tempo e controle de mídia (qualquer player MPRIS: Spotify, navegador, VLC…). |
+| **Início** | Relógio e previsão do tempo. É a página em que a ilha sempre abre. |
+| **Mídia** | Controle de mídia numa página própria (qualquer player MPRIS: Spotify, navegador, VLC…): capa, equalizador, progresso, controles e volume. |
 | **Água** | Lembrete de beber água com meta diária. |
-| **Agenda** | Próximos eventos do Google Calendar e aviso antes das reuniões. Opcional: criar eventos pela ilha. |
+| **Agenda** | Calendário do mês inteiro, com um ponto nos dias com eventos (Google Calendar). Clique num dia para ver os eventos dele; setas trocam o mês e "Hoje" volta. Aviso antes das reuniões. Opcional: criar eventos pela ilha. |
 | **Notificações** | Histórico das últimas notificações, com selo de não lidas. Só na memória. |
 | **Foco** | Pomodoro e timer, com contador na pílula e aviso com som no fim. |
 | **Tarefas** | Lista rápida de tarefas, salva localmente. |
 | **Câmera** | Teste de webcam e de microfone antes de uma chamada. Só liga quando você clica. |
 | **Bluetooth** | Dispositivos pareados, bateria e conectar/desconectar. Some sozinha se o PC não tem Bluetooth. |
-| **Sistema** | CPU, RAM, temperatura, volume e saída de áudio, rede, bateria/brilho (notebooks), manter acordado e botões de energia. |
-| **Claude Code** | Uso de tokens e custo por função/projeto/modelo, gráfico de 7 dias e limite diário opcional. |
-| **IA** | O mascote Clawd mostra o que cada agente (sessão do Claude Code) faz: dock com um botão por sessão e, no detalhe, o Clawd animado conforme o estado (trabalhando, aguardando, dormindo), a tarefa, os subagentes em execução e atalhos para a pasta e o terminal. |
-| **Sessões** | Sessões do Claude Code abertas, com botão para ir ao terminal de cada uma. |
+| **Sistema** | Em duas colunas: CPU, RAM e temperatura com rede à esquerda; volume e saída de áudio, brilho e bateria (notebooks) e manter acordado à direita; botões de energia embaixo. |
+| **Claude Code** | Sessões, agentes e uso numa página só, em duas colunas. À esquerda, os agentes: dock com um botão por sessão e, no detalhe, o mascote Clawd animado conforme o estado (trabalhando, aguardando, dormindo), a tarefa, os subagentes em execução e atalhos para a pasta e o terminal. À direita, uso de tokens e custo por função/projeto/modelo, gráfico de 7 dias e limite diário opcional. |
 
 <p>
 <img src="docs/screenshots/focus_dark.png" width="32%"> <img src="docs/screenshots/tasks_dark.png" width="32%"> <img src="docs/screenshots/notifs_dark.png" width="32%">
@@ -40,7 +39,7 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 
 ![logos dos serviços](docs/screenshots/logos_servicos.png)
 
-**Navegação:** a faixa de baixo tem um ícone por página. A atual fica destacada, o sino de Notificações fica laranja quando há não lidas, e passar o mouse mostra o nome da página.
+**Navegação:** a faixa de cima tem um ícone por página (fica fixa no topo, então o ícone não sai de debaixo do mouse quando a página muda de altura). Em Configurações, "Atraso para recolher" (0 a 5 s) controla quanto a ilha espera depois que o mouse sai. A atual fica destacada, o sino de Notificações fica laranja quando há não lidas, e passar o mouse mostra o nome da página.
 
 ![faixa de páginas](docs/screenshots/pagina_icones.png)
 

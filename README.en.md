@@ -16,18 +16,17 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 
 | Page | What it is for |
 |---|---|
-| **Home** | Clock, weather forecast and media control (any MPRIS player: Spotify, browser, VLC…). |
+| **Home** | Clock and weather forecast. It is the page the island always opens on. |
+| **Media** | Media control on its own page (any MPRIS player: Spotify, browser, VLC…): cover, equalizer, progress, controls and volume. |
 | **Water** | Drink-water reminder with a daily goal. |
-| **Agenda** | Upcoming Google Calendar events and an alert before meetings. Optional: create events from the island. |
+| **Agenda** | A full-month calendar with a dot on days that have events (Google Calendar). Click a day to see its events; arrows change the month and "Today" jumps back. Alert before meetings. Optional: create events from the island. |
 | **Notifications** | History of recent notifications with an unread badge. Memory only. |
 | **Focus** | Pomodoro and timer, with a counter in the pill and a sound alert at the end. |
 | **Tasks** | A quick task list, stored locally. |
 | **Camera** | Webcam and microphone test before a call. Only turns on when you click. |
 | **Bluetooth** | Paired devices, battery, connect/disconnect. Hides itself if the PC has no Bluetooth. |
-| **System** | CPU, RAM, temperature, volume and audio output, network, battery/brightness (laptops), keep-awake and power buttons. |
-| **Claude Code** | Token usage and cost by tool/project/model, a 7-day chart and an optional daily limit. |
-| **AI** | The Clawd mascot shows what each agent (Claude Code session) is doing: a dock with one button per session and, in the detail, an animated Clawd for the state (working, waiting, sleeping), the task, running subagents and shortcuts to the folder and terminal. |
-| **Sessions** | Open Claude Code sessions, with a button to jump to each one's terminal. |
+| **System** | Two columns: CPU, RAM and temperature plus network on the left; volume and audio output, brightness and battery (laptops) and keep-awake on the right; power buttons at the bottom. |
+| **Claude Code** | Sessions, agents and usage on one page, in two columns. On the left, the agents: a dock with one button per session and, in the detail, an animated Clawd for the state (working, waiting, sleeping), the task, running subagents and shortcuts to the folder and terminal. On the right, token usage and cost by tool/project/model, a 7-day chart and an optional daily limit. |
 
 <p>
 <img src="docs/screenshots/focus_dark.png" width="32%"> <img src="docs/screenshots/tasks_dark.png" width="32%"> <img src="docs/screenshots/notifs_dark.png" width="32%">
@@ -40,7 +39,7 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 
 ![service logos](docs/screenshots/logos_servicos.png)
 
-**Navigation:** the bottom strip has one icon per page. The current one is highlighted, the Notifications bell turns orange when there are unread ones, and hovering shows the page name.
+**Navigation:** the top strip has one icon per page (it stays fixed at the top, so the icon never moves out from under the mouse when the page height changes). In Settings, "Delay before collapsing" (0 to 5 s) controls how long the island waits after the mouse leaves. The current one is highlighted, the Notifications bell turns orange when there are unread ones, and hovering shows the page name.
 
 ![page strip](docs/screenshots/pagina_icones.png)
 
