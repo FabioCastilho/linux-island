@@ -26,6 +26,7 @@ A "dynamic island" for the Linux desktop, in the style of the iPhone's Dynamic I
 | **Bluetooth** | Paired devices, battery, connect/disconnect. Hides itself if the PC has no Bluetooth. |
 | **System** | CPU, RAM, temperature, volume and audio output, network, battery/brightness (laptops), keep-awake and power buttons. |
 | **Claude Code** | Token usage and cost by tool/project/model, a 7-day chart and an optional daily limit. |
+| **AI** | The Clawd mascot shows what each agent (Claude Code session) is doing: a dock with one button per session and, in the detail, an animated Clawd for the state (working, waiting, sleeping), the task, running subagents and shortcuts to the folder and terminal. |
 | **Sessions** | Open Claude Code sessions, with a button to jump to each one's terminal. |
 
 <p>
@@ -74,7 +75,7 @@ The island is single-instance: running `run.sh` again with an option talks to th
 | Command | What it does |
 |---|---|
 | `--toggle` | Expand or collapse. |
-| `--page NAME` | Open on a page (`home`, `water`, `agenda`, `notifs`, `focus`, `tasks`, `camera`, `bluetooth`, `system`, `claude`, `sessions`). |
+| `--page NAME` | Open on a page (`home`, `water`, `agenda`, `notifs`, `focus`, `tasks`, `camera`, `bluetooth`, `system`, `claude`, `ia`, `sessions`). |
 | `--next-page` / `--prev-page` | Change page (the first call only opens the island). |
 | `--play-pause`, `--next-track`, `--prev-track` | Media control without opening the island. |
 | `--dnd` | Toggle the island's notification do-not-disturb. |

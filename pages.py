@@ -20,11 +20,11 @@ TRANSITION_MS = 320            # duração-base; o valor real passa por anim.ms(
 PAGES = pagelist.ALL_PAGES     # todas as páginas existentes (as visíveis vêm de _page_names)
 PAGE_TITLES = {"home": "Início", "water": "Água", "agenda": "Agenda", "notifs": "Notificações",
                "focus": "Foco", "tasks": "Tarefas", "camera": "Câmera", "bluetooth": "Bluetooth",
-               "system": "Sistema", "claude": "Claude Code", "sessions": "Sessões"}
+               "system": "Sistema", "claude": "Claude Code", "ia": "IA", "sessions": "Sessões"}
 # ícone de cada página na faixa de baixo (glifos próprios de icons.py)
 PAGE_GLYPHS = {"home": "home", "water": "drop", "agenda": "calendar", "notifs": "bell",
                "focus": "timer", "tasks": "tasks", "camera": "camera", "bluetooth": "bluetooth",
-               "system": "chip", "claude": "terminal", "sessions": "layers"}
+               "system": "chip", "claude": "terminal", "ia": "bot", "sessions": "layers"}
 
 
 class PagesMixin:
@@ -41,7 +41,7 @@ class PagesMixin:
                              ("focus", self.focus_page), ("tasks", self.tasks_page),
                              ("camera", self.camera_page), ("bluetooth", self.bluetooth_page),
                              ("system", self.system_page), ("claude", self.claude_page),
-                             ("sessions", self.sessions_page)):
+                             ("ia", self.ia_page), ("sessions", self.sessions_page)):
             self.pages.add_named(widget, name)
         box.pack_start(self.pages, False, False, 0)
 

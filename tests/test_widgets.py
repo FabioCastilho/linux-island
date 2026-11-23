@@ -38,6 +38,65 @@ def make_cfg():
 
 @unittest.skipUnless(HAVE_DISPLAY, "sem sessão gráfica")
 class WidgetTests(unittest.TestCase):
+    def test_clawd_sprite_has_every_frame_and_draws(self):
+        import os
+        import clawd_sprite
+        for anim, (fps, names) in clawd_sprite.ANIMS.items():
+            self.assertGreater(fps, 0)
+            for name in names:
+                with self.subTest(anim=anim, frame=name):
+                    self.assertTrue(os.path.exists(clawd_sprite.frame_path(name)))
+        view = clawd_sprite.SpriteView(96)
+        for anim in clawd_sprite.ANIMS:
+            view.set_anim(anim)
+            paint(view, 96, 75)
+        view.set_anim("nao-existe")  # nome desconhecido cai no parado
+        self.assertEqual(view.anim, "idle")
+
+    def test_ia_mood_rules(self):
+        from ia_view import CHEER_FOR_S, SLEEP_AFTER_S, mood
+        now = 10_000.0
+        s = lambda status, age: {"status": status, "since": now - age}
+        self.assertEqual(mood(s("busy", 5), now), "busy")
+        self.assertEqual(mood(s("idle", CHEER_FOR_S - 1), now), "done")
+        self.assertEqual(mood(s("idle", 120), now), "idle")
+        self.assertEqual(mood(s("idle", SLEEP_AFTER_S + 1), now), "sleep")
+        self.assertEqual(mood(s("waiting", 1), now), "alert")
+        self.assertEqual(mood(s("?", 1), now), "idle")
+
+    def test_ia_page_dock_selection_and_empty_state(self):
+        import time
+        import ia_view
+        now = time.time()
+        sess = [dict(pid=i, sid=f"s{i}", cwd="/tmp", project=f"p{i}", name="n", status=st,
+                     since=now - 60, title=None, prompt="oi") for i, st in
+                enumerate(("busy", "idle", "waiting"))]
+        old = ia_view.read_sessions, ia_view.read_subagents
+        ia_view.read_sessions = lambda: sess
+        ia_view.read_subagents = lambda sid, limit=4, now=None: (
+            [dict(type="Explore", desc="lendo", running=True, model="", mtime=now)] if sid == "s0" else [])
+        try:
+            page = ia_view.IAPage()
+            page.refresh()
+            self.assertEqual(page.selected, "s0")
+            self.assertEqual([b.get_visible() for b in page.buttons], [True, True, True, False, False])
+            self.assertTrue(page.body.get_visible())
+            self.assertFalse(page.empty.get_visible())
+            self.assertFalse(page.no_subs.get_visible())  # s0 tem um subagente
+            self.assertIn("1 trabalhando", page.summary.get_text())
+            page.pick("s2")
+            self.assertEqual(page.name.get_text(), "p2")
+            self.assertEqual(page.sprite.anim, "alert")
+            self.assertTrue(page.no_subs.get_visible())
+            self.assertTrue(page.buttons[2].get_style_context().has_class("selected"))
+            sess.clear()  # todas as sessões acabaram: o Clawd dorme
+            page.refresh()
+            self.assertIsNone(page.selected)
+            self.assertTrue(page.empty.get_visible())
+            self.assertFalse(page.body.get_visible())
+        finally:
+            ia_view.read_sessions, ia_view.read_subagents = old
+
     def test_every_glyph_draws(self):
         from icons import GLYPHS, Glyph
         for name in GLYPHS:

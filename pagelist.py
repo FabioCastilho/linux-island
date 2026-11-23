@@ -4,7 +4,7 @@ Função pura (sem GTK) para a ordem e a visibilidade poderem ser testadas e usa
 configuração e pela janela.
 """
 ALL_PAGES = ("home", "water", "agenda", "notifs", "focus", "tasks", "camera", "bluetooth",
-             "system", "claude", "sessions")
+             "system", "claude", "ia", "sessions")
 ALWAYS_SHOWN = ("home",)  # sem a página inicial a ilha não teria o que mostrar ao expandir
 
 

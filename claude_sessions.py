@@ -91,6 +91,32 @@ def read_sessions():
     return out
 
 
+def read_subagents(sid, limit=4, now=None):
+    """Subagentes da sessão (pasta subagents/ do histórico): os que ainda rodam primeiro, depois
+    os que terminaram há menos de 10 min. Cada um vem de um .meta.json ao lado da conversa dele."""
+    now = time.time() if now is None else now
+    out = []
+    for folder in glob.glob(os.path.join(PROJECTS, "*", sid, "subagents")):
+        for path in glob.glob(os.path.join(folder, "*.meta.json")):
+            try:
+                with open(path) as f:
+                    meta = json.load(f)
+                mtime = os.path.getmtime(path)
+            except (OSError, ValueError):
+                continue
+            if not isinstance(meta, dict):
+                continue
+            finished = meta.get("finished")
+            running = finished is False or (finished is None and now - mtime < 120)
+            if not running and now - mtime > 600:
+                continue
+            out.append({"type": str(meta.get("agentType") or "agent"),
+                        "desc": str(meta.get("description") or ""),
+                        "model": str(meta.get("model") or ""), "running": running, "mtime": mtime})
+    out.sort(key=lambda a: (not a["running"], -a["mtime"]))
+    return out[:limit]
+
+
 def ago(ts):
     s = max(0, int(time.time() - ts))
     if s < 60:

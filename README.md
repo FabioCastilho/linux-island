@@ -26,6 +26,7 @@ Uma "ilha dinâmica" para o desktop Linux, no estilo da Dynamic Island do iPhone
 | **Bluetooth** | Dispositivos pareados, bateria e conectar/desconectar. Some sozinha se o PC não tem Bluetooth. |
 | **Sistema** | CPU, RAM, temperatura, volume e saída de áudio, rede, bateria/brilho (notebooks), manter acordado e botões de energia. |
 | **Claude Code** | Uso de tokens e custo por função/projeto/modelo, gráfico de 7 dias e limite diário opcional. |
+| **IA** | O mascote Clawd mostra o que cada agente (sessão do Claude Code) faz: dock com um botão por sessão e, no detalhe, o Clawd animado conforme o estado (trabalhando, aguardando, dormindo), a tarefa, os subagentes em execução e atalhos para a pasta e o terminal. |
 | **Sessões** | Sessões do Claude Code abertas, com botão para ir ao terminal de cada uma. |
 
 <p>
@@ -74,7 +75,7 @@ A ilha é de instância única: rodar `run.sh` de novo com uma opção fala com 
 | Comando | O que faz |
 |---|---|
 | `--toggle` | Expande ou recolhe. |
-| `--page NOME` | Abre numa página (`home`, `water`, `agenda`, `notifs`, `focus`, `tasks`, `camera`, `bluetooth`, `system`, `claude`, `sessions`). |
+| `--page NOME` | Abre numa página (`home`, `water`, `agenda`, `notifs`, `focus`, `tasks`, `camera`, `bluetooth`, `system`, `claude`, `ia`, `sessions`). |
 | `--next-page` / `--prev-page` | Troca de página (a primeira chamada só abre a ilha). |
 | `--play-pause`, `--next-track`, `--prev-track` | Controle de mídia sem abrir a ilha. |
 | `--dnd` | Liga/desliga o não perturbe das notificações da ilha. |

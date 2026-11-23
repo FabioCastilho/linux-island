@@ -381,6 +381,31 @@ def _chip(cr):
             cr.stroke()
 
 
+def _bot(cr):
+    """Carinha de robô: cabeça, antena e olhos."""
+    rounded = 0.12
+    x0, y0, x1, y1 = 0.16, 0.36, 0.84, 0.86
+    cr.move_to(x0 + rounded, y0)
+    cr.line_to(x1 - rounded, y0)
+    cr.curve_to(x1, y0, x1, y0, x1, y0 + rounded)
+    cr.line_to(x1, y1 - rounded)
+    cr.curve_to(x1, y1, x1, y1, x1 - rounded, y1)
+    cr.line_to(x0 + rounded, y1)
+    cr.curve_to(x0, y1, x0, y1, x0, y1 - rounded)
+    cr.line_to(x0, y0 + rounded)
+    cr.curve_to(x0, y0, x0, y0, x0 + rounded, y0)
+    cr.close_path()
+    cr.stroke()
+    cr.move_to(0.5, y0)
+    cr.line_to(0.5, 0.18)
+    cr.stroke()
+    for ex in (0.36, 0.64):
+        cr.arc(ex, 0.60, 0.045, 0, 6.2832)
+        cr.fill()
+    cr.arc(0.5, 0.14, 0.05, 0, 6.2832)
+    cr.fill()
+
+
 def _layers(cr):
     cr.move_to(0.5, 0.16)
     cr.line_to(0.86, 0.36)
@@ -406,7 +431,7 @@ GLYPHS = {
     "win_min": _win_min, "win_max": _win_max, "win_restore": _win_restore,
     "win_close": _win_close, "bluetooth": _bluetooth, "mic": _mic, "camera": _camera, "terminal": _terminal, "left": _chevron_left, "right": _chevron_right,
     "calendar": _calendar, "video": _video,
-    "home": _home, "drop": _drop, "chip": _chip, "layers": _layers,
+    "home": _home, "drop": _drop, "chip": _chip, "layers": _layers, "bot": _bot,
 }
 
 

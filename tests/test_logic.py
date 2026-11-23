@@ -10,6 +10,7 @@ import pagelist
 import sysinfo
 from focus import Focus, fmt
 from notif_history import NotificationHistory
+import claude_sessions
 import claude_usage
 import terminal_focus
 import themes
@@ -809,6 +810,47 @@ class BrandDetectionTests(unittest.TestCase):
         self.assertEqual(names, set(brands.COLORS))
         for _h, b in brands.HOSTS + brands.TITLE_SUFFIXES:
             self.assertIn(b, names)
+
+
+class SubagentTests(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.old, claude_sessions.PROJECTS = claude_sessions.PROJECTS, self.tmp.name
+        self.folder = os.path.join(self.tmp.name, "-home-x", "sess1", "subagents")
+        os.makedirs(self.folder)
+
+    def tearDown(self):
+        claude_sessions.PROJECTS = self.old
+        self.tmp.cleanup()
+
+    def put(self, name, meta, age):
+        path = os.path.join(self.folder, name + ".meta.json")
+        with open(path, "w") as f:
+            json.dump(meta, f)
+        t = 1_000_000 - age
+        os.utime(path, (t, t))
+
+    def test_running_first_then_recent_finished_and_old_ones_dropped(self):
+        self.put("a", {"agentType": "Explore", "description": "lendo", "finished": True}, 30)
+        self.put("b", {"agentType": "Bash", "description": "testes", "finished": False}, 200)
+        self.put("c", {"agentType": "velho", "finished": True}, 3600)  # terminou há 1 h: some
+        subs = claude_sessions.read_subagents("sess1", now=1_000_000)
+        self.assertEqual([x["type"] for x in subs], ["Bash", "Explore"])
+        self.assertEqual([x["running"] for x in subs], [True, False])
+
+    def test_missing_finished_flag_uses_file_age(self):
+        self.put("a", {"agentType": "novo"}, 10)
+        self.put("b", {"agentType": "parado"}, 500)
+        subs = {x["type"]: x["running"] for x in claude_sessions.read_subagents("sess1", now=1_000_000)}
+        self.assertEqual(subs, {"novo": True, "parado": False})
+
+    def test_limit_other_sessions_and_broken_files(self):
+        for i in range(6):
+            self.put(f"a{i}", {"agentType": f"t{i}", "finished": False}, i)
+        with open(os.path.join(self.folder, "x.meta.json"), "w") as f:
+            f.write("{quebrado")
+        self.assertEqual(len(claude_sessions.read_subagents("sess1", limit=3, now=1_000_000)), 3)
+        self.assertEqual(claude_sessions.read_subagents("outra", now=1_000_000), [])
 
 
 if __name__ == "__main__":

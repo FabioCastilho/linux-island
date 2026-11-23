@@ -179,3 +179,34 @@ separator {
 .island .over {
   color: rgb(237, 102, 82);
 }
+
+/* página "IA": dock de agentes + detalhe com o Clawd */
+.island button.ia-rail {
+  background: rgba(255, 255, 255, 0.07);
+  border: 2px solid transparent;
+  border-radius: 15px;
+  padding: 0;
+  min-width: 0;
+  min-height: 0;
+  box-shadow: none;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.island button.ia-rail:hover {
+  background: rgba(255, 255, 255, 0.13);
+}
+
+.island button.ia-rail.selected {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.island .ia-detail {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 10px 12px;
+}
+
+.island .ia-pic {
+  background: rgba(255, 255, 255, 0.07);
+  border-radius: 12px;
+}
